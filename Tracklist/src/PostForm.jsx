@@ -37,12 +37,12 @@ function PostForm({ onPostSubmit }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-xl mx-auto p-4 border rounded shadow-md space-y-4">
+    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto p-8 border rounded shadow-md space-y-6 bg-white">
       <textarea
         placeholder="Write something..."
         value={text}
         onChange={(e) => setText(e.target.value)}
-        className="w-full p-2 border border-gray-300 rounded"
+        className="w-full h-32 p-4 border border-gray-300 rounded-lg text-sm"
         required
       />
       <input
@@ -50,10 +50,10 @@ function PostForm({ onPostSubmit }) {
         id="videoInput" // Add ID for resetting file input
         accept="video/*"
         onChange={handleVideoChange}
-        className="block w-full text-sm text-gray-500"
+        className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
         required
       />
-      <button type="submit" className="px-4 py-2 bg-blue-500 text-white rounded">
+      <button type="submit" className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600">
         Submit Post
       </button>
     </form>
