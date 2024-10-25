@@ -7,7 +7,7 @@ function PostList({ posts }) {
         <div key={index} className="p-4 border rounded shadow-md">
           <p className="mb-2">{post.text}</p>
           <video width="100%" height="auto" controls preload="metadata">
-            <source src={`http://localhost:4000${post.videoPath}`} type="video/mp4" />
+            <source src={post.videoURL} type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>
@@ -17,6 +17,7 @@ function PostList({ posts }) {
 }
 
 export default PostList;
+
 
   
   
