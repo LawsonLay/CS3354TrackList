@@ -1,31 +1,37 @@
 import { useState } from 'react';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'; 
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'; 
 import { collection, addDoc } from 'firebase/firestore'; 
-import { db, storage } from './firebase'; // Import Firebase config
+import { db, storage } from './firebase'; // Import Firebase configuration
+import { v4 as uuidv4 } from 'uuid'; // To create unique IDs for file uploads
 
 function PostForm({ onPostSubmit }) {
   const [text, setText] = useState('');
   const [video, setVideo] = useState(null);
-  const [uploadProgress, setUploadProgress] = useState(0); 
-  const dberf = collection(db, 'UserData'); 
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploading, setUploading] = useState(false); // State to handle button disable during upload
+  
+  const dberf = collection(db, 'UserData'); // Firestore collection reference
 
+  
   // Handle video selection
   const handleVideoChange = (e) => {
     setVideo(e.target.files[0]); // Capture the selected video file
   };
 
-  // Handle form submission
+  // Handle form submission (upload video and save text and video URL to Firestore)
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    
     if (!video) {
       console.error('No video selected');
       return;
     }
+    
+    setUploading(true); // Set the uploading state to disable the button during upload
 
     // Create a reference to the video in Firebase Storage
-    const storageRef = ref(storage, `videos/${Date.now()}_${video.name}`);
-    
+    const storageRef = ref(storage, `videos/${Date.now()}_${uuidv4()}_${video.name}`);
+
     // Start the upload process
     const uploadTask = uploadBytesResumable(storageRef, video);
 
@@ -38,6 +44,7 @@ function PostForm({ onPostSubmit }) {
       },
       (error) => {
         console.error('Upload error:', error);
+        setUploading(false); // Reset the uploading state in case of an error
       },
       async () => {
         // Handle successful upload
@@ -49,11 +56,12 @@ function PostForm({ onPostSubmit }) {
         // Call the parent function to update the post list
         onPostSubmit({ text, videoURL: downloadURL });
 
-        // Clear form inputs
+        // Clear form inputs after success
         setText('');
         setVideo(null);
         setUploadProgress(0);
         document.getElementById('videoInput').value = ''; // Reset the file input
+        setUploading(false); // Re-enable the submit button after success
       }
     );
   };
@@ -76,8 +84,12 @@ function PostForm({ onPostSubmit }) {
         required
       />
       {uploadProgress > 0 && <p>Uploading: {uploadProgress}%</p>}
-      <button type="submit" className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600">
-        Submit Post
+      <button 
+        type="submit" 
+        className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600"
+        disabled={uploading} // Disable the button while uploading
+      >
+        {uploading ? 'Uploading...' : 'Submit Post'}
       </button>
     </form>
   );
