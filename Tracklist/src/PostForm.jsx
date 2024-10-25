@@ -12,7 +12,6 @@ function PostForm({ onPostSubmit }) {
   
   const dberf = collection(db, 'UserData'); // Firestore collection reference
 
-  
   // Handle video selection
   const handleVideoChange = (e) => {
     setVideo(e.target.files[0]); // Capture the selected video file
