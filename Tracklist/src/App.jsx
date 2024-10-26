@@ -21,6 +21,13 @@ const fetchAlbumCoverFromLastFM = async (artist, track) => {
   return data.track.album ? data.track.album.image[3]['#text'] : ''; // Get the largest image available
 };
 
+// Function to calculate luminance and determine text color
+const getTextColor = (backgroundColor) => {
+  const rgb = backgroundColor.match(/\d+/g);
+  const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+  return luminance > 0.5 ? 'black' : 'white';
+};
+
 function App() {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -33,13 +40,19 @@ function App() {
   const [isSearchPerformed, setIsSearchPerformed] = useState(false); 
   const [isSubmitted, setIsSubmitted] = useState(false); 
   const [isLoading, setIsLoading] = useState(false); 
+  const [isAlbumCoverVisible, setIsAlbumCoverVisible] = useState(false);
+  const [isAlbumCoverLoading, setIsAlbumCoverLoading] = useState(false);
+  const [backgroundStyle, setBackgroundStyle] = useState({ backgroundColor: '#1a1a1a' });
+  const [textColor, setTextColor] = useState('white');
 
   const handleRating = (rate) => {
     setRating(rate);
   };
 
   const handleCommentChange = (e) => {
-    setComment(e.target.value);
+    if (e.target.value.length <= 280) {
+      setComment(e.target.value);
+    }
   };
 
   // Search Last.fm Database
@@ -47,7 +60,8 @@ function App() {
     try {
       const fetchedTracks = await fetchTracksFromLastFM(searchQuery);
       setTracks(fetchedTracks);
-      setIsSearchPerformed(true); // Set search performed to true
+      setIsSearchPerformed(true); 
+      setIsAlbumCoverVisible(false);
     } catch (error) {
       console.error('Error fetching tracks from Last.fm:', error);
     }
@@ -62,12 +76,24 @@ function App() {
     setSelectedArtist(artistName);
 
     setAlbumCover(''); // Clear album cover when a new track is selected
-
+    setIsAlbumCoverLoading(true);
+    
     try {
       const coverUrl = await fetchAlbumCoverFromLastFM(artistName, trackName);
       setAlbumCover(coverUrl);
+      setIsAlbumCoverVisible(true);
+      const backgroundColor = coverUrl ? '' : '#1a1a1a';
+      setBackgroundStyle({
+        backgroundImage: coverUrl ? `url(${coverUrl})` : '',
+        backgroundColor: backgroundColor,
+        backgroundSize: 'cover', // Ensure the background image stretches to cover the container
+        backgroundPosition: 'center', // Center the background image
+      });
+      setTextColor(getTextColor(backgroundColor));
     } catch (error) {
       console.error('Error fetching album cover:', error);
+    } finally {
+      setIsAlbumCoverLoading(false);
     }
   };
 
@@ -75,6 +101,11 @@ function App() {
   const handleSubmit = async () => {
     if (!selectedTrack) {
       alert('Please select a track to rate.');
+      return;
+    }
+
+    if (comment.length > 280) {
+      alert('Comment exceeds the 280-character limit.');
       return;
     }
 
@@ -95,6 +126,8 @@ function App() {
       setSelectedTrack('');
       setSelectedArtist('');
       setAlbumCover(''); // Clear album cover after submission
+      setBackgroundStyle({ backgroundColor: '#1a1a1a' }); // Reset background
+      setTextColor('white'); // Reset text color
     } catch (e) {
       console.error('Error adding document:', e);
       alert('Failed to submit rating and comment.');
@@ -104,7 +137,8 @@ function App() {
   };
 
   return (
-    <div className="App flex items-center justify-center h-screen bg-gray-100 flex-col">
+    <div className="App relative flex items-center justify-center h-screen flex-col w-full max-w-4xl mx-auto">
+      <div className="background-blur" style={backgroundStyle}></div>
       
       {/* Search bar for Last.fm tracks */}
       <div className="mt-4">
@@ -129,7 +163,7 @@ function App() {
             onChange={handleTrackSelection}
             className="p-2 border rounded border-gray-300 w-full max-w-md"
           >
-            <option value="">Select a track...</option>
+            <option value="">Select a Track</option>
             {tracks.map((track) => (
               <option key={track.mbid || track.url} value={`${track.name} by ${track.artist}`}>
                 {track.name} by {track.artist}
@@ -141,23 +175,32 @@ function App() {
 
 
       {/* Album Cover Display */}
+      {isAlbumCoverVisible && (
         <div className="album-cover-container mt-4 flex flex-col items-center">
-          <img 
-            src={albumCover || '/noCover.png'} 
-            alt="Album Cover" 
-            className="w-48 h-48 object-cover rounded" 
-          />
+          {isAlbumCoverLoading ? (
+            <div className="album-cover-spinner" role="status"></div>
+          ) : (
+            <img 
+              src={albumCover || '/noCover.png'} 
+              alt="Album Cover" 
+              className="w-48 h-48 object-cover rounded shadow-2xl" 
+            />
+          )}
           {selectedTrack && (
-            <div className="mt-2 text-lg font-semibold text-center">
+            <div className="mt-2 text-lg font-semibold text-center" style={{ color: textColor, textShadow: '4px 4px 8px rgba(0, 0, 0, 0.7)'  }}>
               {selectedTrack}
-              <div className="text-sm font-normal text-gray-600">
+              <div className="text-sm font-normal" style={{ color: textColor, textShadow: '4px 4px 8px rgba(0, 0, 0, 0.7)'  }}>
                 {selectedArtist}
               </div>
             </div>
           )}
         </div>
+      )}
+
 
       {/* Star Rating */}
+      {isSearchPerformed && (
+        <>
       <div className="text-6xl mt-4">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star 
@@ -171,14 +214,16 @@ function App() {
         ))}
       </div>
 
-
+    {/* Container for comments and submit button */}
+    <div className="mt-4 flex items-center space-x-4">
 
       {/* Textbox for comments */}
       <textarea
         value={comment}
         onChange={handleCommentChange}
-        placeholder="Leave a comment..."
-        className="mt-4 p-2 w-full max-w-md h-24 border rounded border-gray-300"
+        placeholder="What's up with it? Up to 280 characters."
+        className="p-2 w-full max-w-xl h-24 border rounded border-gray-300"
+        style={{ resize: 'none' }}
       />
 
       {/* Submit Button */}
@@ -189,8 +234,11 @@ function App() {
       >
         {isLoading ? (
           <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-        ) : isSubmitted ? 'Submitted!' : 'Submit Rating & Comment'}
+        ) : isSubmitted ? 'Posted!' : 'Post'}
       </button>
+      </div>
+        </>
+      )}
     </div>
   );
 }
