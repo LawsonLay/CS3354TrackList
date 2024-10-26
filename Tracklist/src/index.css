@@ -1,3 +1,41 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom styles */
+.hover-darken {
+    transition: background-color 0.3s ease;
+  }
+  
+  .hover-darken:hover {
+    filter: brightness(85%);
+  }
+  
+  .search-bar-container {
+    margin-bottom: 20px; /* Adjust the value as needed */
+  }
+  
+  .dropdown-container {
+    margin-bottom: 20px; /* Adjust the value as needed */
+  }
+  
+  .album-cover-container {
+    margin-top: 20px; /* Adjust the value as needed */
+  }
+
+  .spinner-border {
+    display: inline-block;
+    width: 1rem;
+    height: 1rem;
+    vertical-align: text-bottom;
+    border: 0.25em solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spinner-border 0.75s linear infinite;
+  }
+  
+  @keyframes spinner-border {
+    to {
+      transform: rotate(360deg);
+    }
+  }

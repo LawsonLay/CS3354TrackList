@@ -1,8 +1,16 @@
 import React from 'react';
 
-const Star = ({ filled, onClick }) => {
+const Star = ({ filled, hovered, onClick, onMouseEnter, onMouseLeave }) => {
   return (
-    <span onClick={onClick} style={{ cursor: 'pointer', color: filled ? 'gold' : 'gray' }}>
+    <span 
+      onClick={onClick} 
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      style={{ 
+        cursor: 'pointer', 
+        color: filled ? 'gold' : hovered ? 'rgba(255, 215, 0, 0.5)' : 'gray',
+        }}
+    >
       ★
     </span>
   );
