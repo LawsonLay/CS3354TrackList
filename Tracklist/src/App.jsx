@@ -6,8 +6,17 @@ function App() {
   // Array of example video URLs
   const videoURLs = [
     'https://www.w3schools.com/html/mov_bbb.mp4', // Big Buck Bunny
-    'https://www.w3schools.com/html/movie.mp4' // Another Sample Video
+    'https://www.w3schools.com/html/movie.mp4', // Sample Video
+    'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // Flower Video
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Another Big Buck Bunny
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', // Elephants Dream
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // For Bigger Blazes
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', // For Bigger Escapes
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', // For Bigger Fun
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', // For Bigger Joyrides
+    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4' // For Bigger Meltdowns
   ];
+  
 
   // Generate 10 random mock posts with text and a unique fileURL and fileType
   const generateMockPosts = () => {

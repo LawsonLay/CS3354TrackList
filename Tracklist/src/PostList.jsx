@@ -19,6 +19,9 @@ function PostList({ posts }) {
               width="100%"
               height="auto"
               controls
+              autoPlay
+              muted
+              loop
               preload="metadata"
               className="rounded-lg"
             >
@@ -33,7 +36,3 @@ function PostList({ posts }) {
 }
 
 export default PostList;
-
-
-  
-  
