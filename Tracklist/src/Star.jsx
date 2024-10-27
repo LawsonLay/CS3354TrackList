@@ -9,6 +9,7 @@ const Star = ({ filled, hovered, onClick, onMouseEnter, onMouseLeave }) => {
       style={{ 
         cursor: 'pointer', 
         color: filled ? 'gold' : hovered ? 'rgba(255, 215, 0, 0.5)' : 'gray',
+        textShadow: '0 0 2px black',
         }}
     >
       ★
