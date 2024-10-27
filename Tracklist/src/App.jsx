@@ -14,7 +14,7 @@ const firebaseConfig = {
   appId: "1:887919704413:web:b8826835f3321ea9f8d0b4"
 };
 
-// Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
 const storage = getStorage(app);
 
@@ -22,10 +22,9 @@ function App() {
   const [posts, setPosts] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Function to fetch video URLs from Firebase Storage
   const fetchVideoURLs = async () => {
     const videoPaths = [
-      'videos/v1.mp4', // Path in Firebase Storage
+      'videos/v1.mp4', 
       'videos/v2.mp4',
       'videos/v3.mp4',
       'videos/v4.mp4',
