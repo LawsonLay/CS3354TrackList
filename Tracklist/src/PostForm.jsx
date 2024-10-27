@@ -6,33 +6,52 @@ import { v4 as uuidv4 } from 'uuid'; // To create unique IDs for file uploads
 
 function PostForm({ onPostSubmit }) {
   const [text, setText] = useState('');
-  const [video, setVideo] = useState(null);
+  const [file, setFile] = useState(null); // For both image and video files
+  const [fileType, setFileType] = useState(''); // Track file type (image or video)
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false); // State to handle button disable during upload
   
   const dberf = collection(db, 'UserData'); // Firestore collection reference
 
-  // Handle video selection
-  const handleVideoChange = (e) => {
-    setVideo(e.target.files[0]); // Capture the selected video file
+  // Handle file selection (either image or video)
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0];
+    if (!selectedFile) return;
+
+    // Validate file type
+    const validImageTypes = ['image/jpeg', 'image/png'];
+    const validVideoTypes = ['video/mp4'];
+
+    if (validImageTypes.includes(selectedFile.type)) {
+      setFileType('image');
+    } else if (validVideoTypes.includes(selectedFile.type)) {
+      setFileType('video');
+    } else {
+      alert('Invalid file type. Only JPEG, PNG, and MP4 files are allowed.');
+      setFile(null);
+      return;
+    }
+
+    setFile(selectedFile); // Capture the selected file
   };
 
-  // Handle form submission (upload video and save text and video URL to Firestore)
+  // Handle form submission (upload file and save text, file URL, and type to Firestore)
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!video) {
-      console.error('No video selected');
+    if (!file) {
+      console.error('No file selected');
       return;
     }
     
     setUploading(true); // Set the uploading state to disable the button during upload
 
-    // Create a reference to the video in Firebase Storage
-    const storageRef = ref(storage, `videos/${Date.now()}_${uuidv4()}_${video.name}`);
+    // Create a reference to the file in Firebase Storage, storing in a folder based on file type
+    const folder = fileType === 'image' ? 'images' : 'videos';
+    const storageRef = ref(storage, `${folder}/${Date.now()}_${uuidv4()}_${file.name}`);
 
     // Start the upload process
-    const uploadTask = uploadBytesResumable(storageRef, video);
+    const uploadTask = uploadBytesResumable(storageRef, file);
 
     // Track upload progress and handle completion/errors
     uploadTask.on(
@@ -49,17 +68,18 @@ function PostForm({ onPostSubmit }) {
         // Handle successful upload
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-        // Save post data (text and video URL) to Firestore
-        await addDoc(dberf, { text, videoURL: downloadURL });
+        // Save post data (text, file URL, and type) to Firestore
+        await addDoc(dberf, { text, fileURL: downloadURL, fileType });
 
         // Call the parent function to update the post list
-        onPostSubmit({ text, videoURL: downloadURL });
+        onPostSubmit({ text, fileURL: downloadURL, fileType });
 
         // Clear form inputs after success
         setText('');
-        setVideo(null);
+        setFile(null);
+        setFileType('');
         setUploadProgress(0);
-        document.getElementById('videoInput').value = ''; // Reset the file input
+        document.getElementById('fileInput').value = ''; // Reset the file input
         setUploading(false); // Re-enable the submit button after success
       }
     );
@@ -76,9 +96,9 @@ function PostForm({ onPostSubmit }) {
       />
       <input
         type="file"
-        id="videoInput"
-        accept="video/*"
-        onChange={handleVideoChange}
+        id="fileInput"
+        accept=".jpeg,.png,.mp4" // Restrict file selection to JPEG, PNG, and MP4
+        onChange={handleFileChange}
         className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
         required
       />
@@ -95,4 +115,3 @@ function PostForm({ onPostSubmit }) {
 }
 
 export default PostForm;
-
