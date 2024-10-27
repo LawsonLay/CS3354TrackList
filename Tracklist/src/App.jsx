@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
 import Star from './Star';
 import { db } from './firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
+import ReviewPage from './ReviewPage';
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -99,63 +101,7 @@ const StarRating = ({ rating, hoveredStar, handleRating, setHoveredStar }) => (
   </div>
 );
 
-/**
- * App component that allows users to search for tracks, select a track, rate it, and leave a comment.
- * 
- * @component
- * @example
- * return (
- *   <App />
- * )
- * 
- * @returns {JSX.Element} The rendered component.
- * 
- * @function
- * @name App
- * 
- * @description
- * This component manages the state and logic for searching tracks from Last.fm, selecting a track, 
- * fetching the album cover, rating the track, and submitting a comment. It includes various state 
- * variables to handle user interactions and API responses.
- * 
- * @state {number} rating - The current rating given by the user.
- * @state {number} hoveredStar - The star currently being hovered over for rating.
- * @state {string} comment - The user's comment about the track.
- * @state {string} selectedTrack - The track selected by the user.
- * @state {string} selectedArtist - The artist of the selected track.
- * @state {string} searchQuery - The search query entered by the user.
- * @state {Array} tracks - The list of tracks fetched from Last.fm based on the search query.
- * @state {string} albumCover - The URL of the album cover for the selected track.
- * @state {boolean} isSearchPerformed - Indicates if a search has been performed.
- * @state {boolean} isSubmitted - Indicates if the rating and comment have been submitted.
- * @state {boolean} isLoading - Indicates if the submission is in progress.
- * @state {boolean} isAlbumCoverVisible - Indicates if the album cover is visible.
- * @state {boolean} isAlbumCoverLoading - Indicates if the album cover is being loaded.
- * @state {Object} backgroundStyle - The style object for the background, including the album cover.
- * @state {string} textColor - The color of the text based on the background.
- * 
- * @function handleRating
- * @description Sets the rating given by the user.
- * @param {number} rate - The rating value.
- * 
- * @function handleCommentChange
- * @description Updates the comment state as the user types, ensuring it does not exceed 280 characters.
- * @param {Event} e - The input change event.
- * 
- * @function handleSearch
- * @description Fetches tracks from Last.fm based on the search query and updates the state.
- * 
- * @function handleTrackSelection
- * @description Handles the selection of a track, fetches the album cover, and updates the state.
- * @param {Event} e - The selection change event.
- * 
- * @function handleSubmit
- * @description Validates and submits the rating and comment to the database, then resets the state.
- * 
- * @returns {JSX.Element} The rendered component.
- */
-
-function App() {
+const Home = () => {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
   const [comment, setComment] = useState('');
@@ -323,6 +269,29 @@ function App() {
         </>
       )}
     </div>
+  );
+};
+
+function App() {
+  return (
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/" className="white-text">Home</Link>
+            </li>
+            <li>
+              <Link to="/reviews" className="white-text">Reviews</Link>
+            </li>
+          </ul>
+        </nav>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/reviews" element={<ReviewPage />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -68,3 +68,17 @@ body {
   .shadow-2xl {
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.7);
   }
+
+  .white-text {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .white-text:hover {
+    text-decoration: underline;
+  }
+
+  .white-background {
+    background-color: white;
+    color: black;
+  }
