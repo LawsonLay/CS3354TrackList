@@ -34,7 +34,5 @@ function PostList({ posts }) {
 
 export default PostList;
 
-
-  
   
   
