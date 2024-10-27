@@ -19,7 +19,7 @@ function PostForm({ onPostSubmit }) {
     if (!selectedFile) return;
 
     // Validate file type
-    const validImageTypes = ['image/jpeg', 'image/png'];
+    const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
     const validVideoTypes = ['video/mp4'];
 
     if (validImageTypes.includes(selectedFile.type)) {
@@ -97,7 +97,7 @@ function PostForm({ onPostSubmit }) {
       <input
         type="file"
         id="fileInput"
-        accept=".jpeg,.png,.mp4" // Restrict file selection to JPEG, PNG, and MP4
+        accept="image/jpeg,image/png,image/jpg,video/mp4" // Specify MIME types directly
         onChange={handleFileChange}
         className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
         required
@@ -115,4 +115,3 @@ function PostForm({ onPostSubmit }) {
 }
 
 export default PostForm;
-
