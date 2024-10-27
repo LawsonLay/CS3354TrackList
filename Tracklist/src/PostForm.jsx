@@ -102,7 +102,7 @@ function PostForm({ onPostSubmit }) {
         className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
         required
       />
-      {uploadProgress > 0 && <p>Uploading: {uploadProgress}%</p>}
+      {uploadProgress > 0 && <p>Uploading: {uploadProgress.toFixed(2)}%</p>}
       <button 
         type="submit" 
         className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600"
@@ -115,3 +115,4 @@ function PostForm({ onPostSubmit }) {
 }
 
 export default PostForm;
+
