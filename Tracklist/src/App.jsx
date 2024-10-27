@@ -5,22 +5,21 @@ import PostList from './PostList';
 function App() {
   // Array of example video URLs
   const videoURLs = [
-   
     'https://www.w3schools.com/html/mov_bbb.mp4', // Big Buck Bunny
     'https://www.w3schools.com/html/movie.mp4' // Another Sample Video
   ];
-  
 
-  // Generate 10 random mock posts with text and a unique videoURL
+  // Generate 10 random mock posts with text and a unique fileURL and fileType
   const generateMockPosts = () => {
     return Array.from({ length: 10 }, (_, i) => ({
       id: i + 1,
       text: `This is the text content for random post #${i + 1}.`,
-      videoURL: videoURLs[i]
+      fileURL: videoURLs[i % videoURLs.length], // Alternate between the available video URLs
+      fileType: 'video' // Explicitly set to "video" for these posts
     }));
   };
 
-  const [posts, setPosts] = useState(generateMockPosts); // Initialize posts with 10 random posts
+  const [posts, setPosts] = useState(generateMockPosts()); // Initialize posts with 10 random posts
 
   const handlePostSubmit = (newPost) => {
     setPosts([...posts, newPost]); // Update the post list with the new post
