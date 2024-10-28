@@ -28,12 +28,12 @@ return (
         <ul>
             {reviews.map((review, index) => (
                 <li key={index} style={{ marginBottom: '20px' }}>
-                    <h2 style={{ fontWeight: 'bold' }}>{review.track}</h2> {/* Make the track text bold */}
+                    <h2 style={{ fontWeight: 'bold' }}>{review.track}</h2>
                     <p>Artist: {review.artist}</p>
                     <p style={{ wordWrap: 'break-word' }}>Comment: {review.comment}</p>
                     <p>Rating: {review.rating}</p>
                     <p>ID: {review.id}</p>
-                    <p>Submitted: {format(review.timestamp, 'PPpp')}</p> {/* Format the timestamp */}
+                    <p>Submitted: {format(review.timestamp, 'PPpp')}</p> 
                 </li>
             ))}
         </ul>

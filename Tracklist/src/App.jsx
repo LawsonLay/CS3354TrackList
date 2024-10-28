@@ -101,6 +101,77 @@ const StarRating = ({ rating, hoveredStar, handleRating, setHoveredStar }) => (
   </div>
 );
 
+/**
+ * Home component for the Tracklist application.
+ * 
+ * This component allows users to search for tracks, select a track, rate it, and leave a comment.
+ * It interacts with the Last.fm API to fetch track information and album covers, and stores ratings in a Firestore database.
+ * 
+ * @component
+ * 
+ * @example
+ * return (
+ *   <Home />
+ * )
+ * 
+ * @returns {JSX.Element} The rendered Home component.
+ * 
+ * @typedef {Object} BackgroundStyle
+ * @property {string} backgroundColor - The background color of the component.
+ * @property {string} [backgroundImage] - The background image URL.
+ * @property {string} [backgroundSize] - The size of the background image.
+ * @property {string} [backgroundPosition] - The position of the background image.
+ * 
+ * @typedef {Object} Track
+ * @property {string} name - The name of the track.
+ * @property {string} artist - The name of the artist.
+ * 
+ * @typedef {Object} Rating
+ * @property {number} rating - The rating given to the track.
+ * @property {string} comment - The comment about the track.
+ * @property {string} track - The name of the track.
+ * @property {string} artist - The name of the artist.
+ * @property {Date} timestamp - The timestamp of the rating.
+ * 
+ * @state {number} rating - The rating given by the user.
+ * @state {number} hoveredStar - The star currently being hovered over for rating.
+ * @state {string} comment - The comment left by the user.
+ * @state {string} selectedTrack - The track selected by the user.
+ * @state {string} selectedArtist - The artist of the selected track.
+ * @state {string} searchQuery - The search query entered by the user.
+ * @state {Track[]} tracks - The list of tracks fetched from Last.fm.
+ * @state {string} albumCover - The URL of the album cover.
+ * @state {boolean} isSearchPerformed - Whether a search has been performed.
+ * @state {boolean} isSubmitted - Whether the rating has been submitted.
+ * @state {boolean} isLoading - Whether the submission is in progress.
+ * @state {boolean} isAlbumCoverVisible - Whether the album cover is visible.
+ * @state {boolean} isAlbumCoverLoading - Whether the album cover is loading.
+ * @state {BackgroundStyle} backgroundStyle - The style of the background.
+ * @state {string} textColor - The color of the text.
+ * @state {string} errorMessage - The error message to display.
+ * 
+ * @function handleRating
+ * @description Handles the rating given by the user.
+ * @param {number} rate - The rating given by the user.
+ * 
+ * @function handleCommentChange
+ * @description Handles changes to the comment input.
+ * @param {React.ChangeEvent<HTMLTextAreaElement>} e - The change event.
+ * 
+ * @function handleSearch
+ * @description Handles the search for tracks based on the search query.
+ * @async
+ * 
+ * @function handleTrackSelection
+ * @description Handles the selection of a track from the dropdown.
+ * @param {React.ChangeEvent<HTMLSelectElement>} e - The change event.
+ * @async
+ * 
+ * @function handleSubmit
+ * @description Handles the submission of the rating and comment.
+ * @async
+ */
+
 const Home = () => {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
