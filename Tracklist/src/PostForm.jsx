@@ -6,32 +6,20 @@ import { v4 as uuidv4 } from 'uuid'; // To create unique IDs for file uploads
 
 function PostForm({ onPostSubmit }) {
   const [text, setText] = useState('');
-  const [file, setFile] = useState(null); // For both image and video files
-  const [fileType, setFileType] = useState(''); // Track file type (image or video)
+  const [file, setFile] = useState(null); // For any file type
+  const [fileType, setFileType] = useState(''); // Store MIME type
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [uploading, setUploading] = useState(false); // State to handle button disable during upload
-  
+  const [uploading, setUploading] = useState(false); // Disable button during upload
+
   const dberf = collection(db, 'UserData'); // Firestore collection reference
 
-  // Handle file selection (either image or video)
+  // Handle file selection
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
 
-    // Validate file type
-    const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg'];
-    const validVideoTypes = ['video/mp4'];
-
-    if (validImageTypes.includes(selectedFile.type)) {
-      setFileType('image');
-    } else if (validVideoTypes.includes(selectedFile.type)) {
-      setFileType('video');
-    } else {
-      alert('Invalid file type. Only JPEG, PNG, and MP4 files are allowed.');
-      setFile(null);
-      return;
-    }
-
+    // Set the file type dynamically based on the selected file's MIME type
+    setFileType(selectedFile.type);
     setFile(selectedFile); // Capture the selected file
   };
 
@@ -46,9 +34,8 @@ function PostForm({ onPostSubmit }) {
     
     setUploading(true); // Set the uploading state to disable the button during upload
 
-    // Create a reference to the file in Firebase Storage, storing in a folder based on file type
-    const folder = fileType === 'image' ? 'images' : 'videos';
-    const storageRef = ref(storage, `${folder}/${Date.now()}_${uuidv4()}_${file.name}`);
+    // Create a reference to the file in Firebase Storage
+    const storageRef = ref(storage, `uploads/${Date.now()}_${uuidv4()}_${file.name}`);
 
     // Start the upload process
     const uploadTask = uploadBytesResumable(storageRef, file);
@@ -69,10 +56,10 @@ function PostForm({ onPostSubmit }) {
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
         // Save post data (text, file URL, and type) to Firestore
-        await addDoc(dberf, { text, fileURL: downloadURL, fileType });
+        const docRef = await addDoc(dberf, { text, fileURL: downloadURL, fileType });
 
         // Call the parent function to update the post list
-        onPostSubmit({ text, fileURL: downloadURL, fileType });
+        onPostSubmit({ id: docRef.id, text, fileURL: downloadURL, fileType });
 
         // Clear form inputs after success
         setText('');
@@ -97,7 +84,6 @@ function PostForm({ onPostSubmit }) {
       <input
         type="file"
         id="fileInput"
-        accept="image/jpeg,image/png,image/jpg,video/mp4" // Specify MIME types directly
         onChange={handleFileChange}
         className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
         required
@@ -115,3 +101,4 @@ function PostForm({ onPostSubmit }) {
 }
 
 export default PostForm;
+

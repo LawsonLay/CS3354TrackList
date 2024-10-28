@@ -1,40 +1,28 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from './firebase'; // Import Firebase configuration
 import PostForm from './PostForm';
 import PostList from './PostList';
 
 function App() {
-  // Array of example video URLs
-  const videoURLs = [
-    'https://www.w3schools.com/html/mov_bbb.mp4', // Big Buck Bunny
-    'https://www.w3schools.com/html/movie.mp4', // Sample Video
-    'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4', // Flower Video
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', // Another Big Buck Bunny
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', // Elephants Dream
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', // For Bigger Blazes
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', // For Bigger Escapes
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', // For Bigger Fun
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', // For Bigger Joyrides
-    'https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4' // For Bigger Meltdowns
-  ];
-  
+  const [posts, setPosts] = useState([]); // Initialize with empty array
+  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for controlling popup visibility
 
-  // Generate 10 random mock posts with text and a unique fileURL and fileType
-  const generateMockPosts = () => {
-    return Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      text: `This is the text content for random post #${i + 1}.`,
-      fileURL: videoURLs[i % videoURLs.length], // Alternate between the available video URLs
-      fileType: 'video' // Explicitly set to "video" for these posts
-    }));
+  // Function to load posts from Firestore
+  const loadPosts = async () => {
+    const postsCollection = collection(db, 'UserData');
+    const postSnapshot = await getDocs(postsCollection);
+    const postList = postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    setPosts(postList); // Set the posts from Firestore to state
   };
 
-  const [posts, setPosts] = useState(generateMockPosts()); // Initialize posts with 10 random posts
+  useEffect(() => {
+    loadPosts(); // Fetch posts on initial load
+  }, []);
 
   const handlePostSubmit = (newPost) => {
     setPosts([...posts, newPost]); // Update the post list with the new post
   };
-
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for controlling popup visibility
 
   const openPopup = () => setIsPopupOpen(true);
   const closePopup = () => setIsPopupOpen(false);
@@ -73,4 +61,3 @@ function App() {
 }
 
 export default App;
-

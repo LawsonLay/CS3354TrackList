@@ -7,27 +7,36 @@ function PostList({ posts }) {
         <div key={index} className="p-4 border rounded shadow-md bg-gray-50">
           <p className="mb-2 text-gray-800">{post.text}</p>
           
-          {/* Conditional rendering based on file type */}
-          {post.fileType === 'image' ? (
+          {/* Conditional rendering with a check for fileType */}
+          {post.fileType?.startsWith('image') ? (
             <img
               src={post.fileURL}
               alt="Uploaded content"
               className="w-full h-auto rounded-lg"
             />
-          ) : (
+          ) : post.fileType?.startsWith('video') ? (
             <video
               width="100%"
               height="auto"
               controls
-              autoPlay
-              muted
-              loop
               preload="metadata"
               className="rounded-lg"
             >
-              <source src={post.fileURL} type="video/mp4" />
+              <source src={post.fileURL} type={post.fileType} />
               Your browser does not support the video tag.
             </video>
+          ) : post.fileType?.startsWith('audio') ? (
+            <audio
+              controls
+              className="w-full"
+            >
+              <source src={post.fileURL} type={post.fileType} />
+              Your browser does not support the audio tag.
+            </audio>
+          ) : post.fileURL ? (
+            <p>File type not supported or missing.</p>
+          ) : (
+            <p>No file uploaded for this post.</p>
           )}
         </div>
       ))}
@@ -36,3 +45,4 @@ function PostList({ posts }) {
 }
 
 export default PostList;
+
