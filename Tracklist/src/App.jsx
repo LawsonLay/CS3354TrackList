@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
 import Star from './Star';
 import { db } from './firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import ReviewPage from './ReviewPage';
+import Post from './Post.jsx';
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -347,18 +348,46 @@ function App() {
   return (
     <Router>
       <div>
-        <nav>
-          <ul>
+        <nav className="bg-gray-800 p-4">
+          <ul className="flex justify-center space-x-4">
             <li>
-              <Link to="/" className="white-text">Home</Link>
+              <NavLink 
+                to="/" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Rating
+              </NavLink>
             </li>
             <li>
-              <Link to="/reviews" className="white-text">Reviews</Link>
+              <NavLink 
+                to="/post" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Post
+              </NavLink>
+            </li>
+            <li>
+              <NavLink 
+                to="/reviews" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Reviews
+              </NavLink>
             </li>
           </ul>
         </nav>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/post" element={<Post />} />
           <Route path="/reviews" element={<ReviewPage />} />
         </Routes>
       </div>
