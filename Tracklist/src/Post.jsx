@@ -4,7 +4,7 @@ import { db } from './firebase'; // Import Firebase configuration
 import PostForm from './PostForm';
 import PostList from './PostList';
 
-function App() {
+function Post() {
   const [posts, setPosts] = useState([]); // Initialize with empty array
   const [isPopupOpen, setIsPopupOpen] = useState(false); // State for controlling popup visibility
 
@@ -60,4 +60,4 @@ function App() {
   );
 }
 
-export default App;
+export default Post;
