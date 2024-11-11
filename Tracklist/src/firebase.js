@@ -23,9 +23,9 @@ const db = getFirestore(app);
 const storage = getStorage(app); // Initialize storage using app
 const videoDB = getStorage(app);
 const textDB = getStorage(app);
-export {videoDB,textDB, db, storage };
-
-// Initialize authentication
 const auth = getAuth();
+export {videoDB,textDB, db, storage, auth};
+
+
 
 
