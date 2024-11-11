@@ -5,7 +5,8 @@ import { db } from './firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import ReviewPage from './ReviewPage';
 import Post from './Post.jsx';
-import "bootstrap/dist/css/bootstrp.min.css"
+import Signup from './Signup.jsx';
+//import "bootstrap/dist/css/bootstrp.min.css"
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -384,12 +385,24 @@ function App() {
                 Reviews
               </NavLink>
             </li>
+            <li>
+              <NavLink 
+                to="/signup" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Sign Up
+              </NavLink>
+            </li>
           </ul>
         </nav>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/post" element={<Post />} />
           <Route path="/reviews" element={<ReviewPage />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
       </div>
     </Router>
