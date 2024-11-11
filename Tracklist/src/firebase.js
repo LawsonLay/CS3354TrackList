@@ -1,6 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage"; // Import Firebase storage
+import { getAuth } from "firebase/auth"; // Import Firebase auth
+
 
 // Firebase configuration using environment variables
 const firebaseConfig = {
@@ -22,4 +24,8 @@ const storage = getStorage(app); // Initialize storage using app
 const videoDB = getStorage(app);
 const textDB = getStorage(app);
 export {videoDB,textDB, db, storage };
+
+// Initialize authentication
+const auth = getAuth();
+
 
