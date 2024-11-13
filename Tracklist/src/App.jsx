@@ -6,7 +6,9 @@ import { collection, addDoc } from 'firebase/firestore';
 import ReviewPage from './ReviewPage';
 import Post from './Post.jsx';
 import Signup from './Signup.jsx';
-//import "bootstrap/dist/css/bootstrp.min.css"
+import 'bootstrap/dist/css/bootstrap.min.css';
+
+
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
