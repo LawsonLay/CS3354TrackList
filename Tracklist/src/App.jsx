@@ -6,7 +6,9 @@ import { collection, addDoc } from 'firebase/firestore';
 import ReviewPage from './ReviewPage';
 import Post from './Post.jsx';
 import Signup from './Signup.jsx';
-import 'bootstrap/dist/css/bootstrap.min.css';
+import Login from './Login.jsx';
+import { auth } from './firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
 
 
 
@@ -349,6 +351,16 @@ const Home = () => {
 };
 
 function App() {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   return (
     <Router>
       <div>
@@ -398,6 +410,17 @@ function App() {
                 Sign Up
               </NavLink>
             </li>
+            <li>
+              <NavLink 
+                to="/login" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Login
+              </NavLink>
+            </li>
           </ul>
         </nav>
         <Routes>
@@ -405,6 +428,7 @@ function App() {
           <Route path="/post" element={<Post />} />
           <Route path="/reviews" element={<ReviewPage />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
         </Routes>
       </div>
     </Router>
