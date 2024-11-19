@@ -5,6 +5,8 @@ import { db } from './firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 import ReviewPage from './ReviewPage';
 import Post from './Post.jsx';
+import Communities from './Communities';
+
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -190,14 +192,25 @@ const Home = () => {
   const [backgroundStyle, setBackgroundStyle] = useState({ backgroundColor: '#1a1a1a' });
   const [textColor, setTextColor] = useState('white');
   const [errorMessage, setErrorMessage] = useState('');
+  const [hashtags, setHashtags] = useState([]);
 
   const handleRating = (rate) => {
     setRating(rate);
   };
 
+  const extractHashtags = (text) => {
+    const hashtagRegex = /#(\w+)/g;
+    const matches = text.match(hashtagRegex);
+    console.log('Extracted hashtags from text:', matches); // Debug log
+    return matches ? matches.map(tag => tag.replace('#', '')) : [];
+  };
+
   const handleCommentChange = (e) => {
-    if (e.target.value.length <= 280) {
-      setComment(e.target.value);
+    const newComment = e.target.value;
+    if (newComment.length <= 280) {
+      setComment(newComment);
+      const extractedTags = extractHashtags(newComment);
+      setHashtags(extractedTags);
     }
   };
 
@@ -251,21 +264,23 @@ const Home = () => {
       return;
     }
 
-    if (comment.length > 280) {
-      alert('Comment exceeds the 280-character limit.');
-      return;
-    }
-
     setIsLoading(true);
-
     try {
-      await addDoc(collection(db, 'ratings'), {
+      const extractedHashtags = extractHashtags(comment);
+      console.log('Hashtags to save:', extractedHashtags); // Debug log
+      
+      const docData = {
         rating: rating,
         comment: comment,
         track: selectedTrack,
         artist: selectedArtist,
-        timestamp: new Date()
-      });
+        timestamp: new Date(),
+        hashtags: extractedHashtags
+      };
+
+      console.log('Saving document with hashtags:', docData); // Debug log
+      await addDoc(collection(db, 'ratings'), docData);
+      
       setIsSubmitted(true);
       setTimeout(() => setIsSubmitted(false), 3000);
       setRating(0);
@@ -273,6 +288,7 @@ const Home = () => {
       setSelectedTrack('');
       setSelectedArtist('');
       setAlbumCover('');
+      setHashtags([]);
       setBackgroundStyle({ backgroundColor: '#1a1a1a' });
       setTextColor('white');
       setErrorMessage('');
@@ -283,6 +299,19 @@ const Home = () => {
       setIsLoading(false);
     }
   };
+
+  const HashtagPreview = () => (
+    <div className="mt-2">
+      {hashtags.map((tag, index) => (
+        <span 
+          key={index} 
+          className="inline-block bg-blue-500 text-white rounded px-2 py-1 text-sm mr-2"
+        >
+          #{tag}
+        </span>
+      ))}
+    </div>
+  );
 
   return (
     <div className="App relative flex items-center justify-center h-screen flex-col w-full max-w-4xl mx-auto">
@@ -323,10 +352,11 @@ const Home = () => {
             <textarea
               value={comment}
               onChange={handleCommentChange}
-              placeholder="What's up with it? Up to 280 characters."
+              placeholder="What's up with it? Up to 280 characters. Use #hashtags to add to communities!"
               className="p-2 w-full max-w-xl h-24 border rounded border-gray-300"
               style={{ resize: 'none' }}
             />
+            <HashtagPreview />
 
             <button
               onClick={handleSubmit}
@@ -383,16 +413,27 @@ function App() {
                 Reviews
               </NavLink>
             </li>
+            <li>
+              <NavLink 
+                to="/communities" 
+                className={({ isActive }) => 
+                  isActive 
+                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
+                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                }>
+                Communities
+              </NavLink>
+            </li>
           </ul>
         </nav>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/post" element={<Post />} />
           <Route path="/reviews" element={<ReviewPage />} />
+          <Route path="/communities" element={<Communities />} />
         </Routes>
       </div>
     </Router>
   );
 }
-
 export default App;
