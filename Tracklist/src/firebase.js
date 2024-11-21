@@ -4,6 +4,7 @@ import { getStorage } from "firebase/storage"; // Import Firebase storage
 import { getAuth } from "firebase/auth"; // Import Firebase auth
 
 
+
 // Firebase configuration using environment variables
 const firebaseConfig = {
     apiKey: "AIzaSyBrTmGzkd-KV8NDXWAhSssXf80i3Z06yRc",

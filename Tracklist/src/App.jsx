@@ -1,15 +1,23 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Route, Routes, NavLink } from 'react-router-dom';
-import Star from './Star';
-import { db } from './firebaseConfig';
-import { collection, addDoc } from 'firebase/firestore';
-import ReviewPage from './ReviewPage';
-import Post from './Post.jsx';
-import Signup from './Signup.jsx';
-import Login from './Login.jsx';
-import { auth } from './firebaseConfig';
-import { onAuthStateChanged } from 'firebase/auth';
-
+import React, { useState, useEffect } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  NavLink,
+  useLocation,
+} from "react-router-dom";
+import Star from "./Star";
+import { db } from "./firebaseConfig.js";
+import { collection, addDoc } from "firebase/firestore";
+import ReviewPage from "./ReviewPage";
+import Post from "./Post.jsx";
+import Signup from "./Signup.jsx";
+import Login from "./Login.jsx";
+import Dashboard from "./Dashboard.jsx"; // Import the Dashboard component
+import { auth } from "./firebaseConfig.js";
+import { onAuthStateChanged,signOut } from "firebase/auth";
+import { AuthContextProvider, useAuth } from "./AuthContext";
+import ProtectedRoute from "./ProtectedRoute";
 
 
 const fetchTracksFromLastFM = async (query) => {
@@ -350,89 +358,164 @@ const Home = () => {
   );
 };
 
+
 function App() {
   const [user, setUser] = useState(null);
 
+  // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
     });
-
     return () => unsubscribe();
   }, []);
 
   return (
-    <Router>
-      <div>
-        <nav className="bg-gray-800 p-4">
-          <ul className="flex justify-center space-x-4">
-            <li>
-              <NavLink 
-                to="/" 
-                className={({ isActive }) => 
-                  isActive 
-                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                }>
-                Rating
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/post" 
-                className={({ isActive }) => 
-                  isActive 
-                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                }>
-                Post
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/reviews" 
-                className={({ isActive }) => 
-                  isActive 
-                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                }>
-                Reviews
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/signup" 
-                className={({ isActive }) => 
-                  isActive 
-                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                }>
-                Sign Up
-              </NavLink>
-            </li>
-            <li>
-              <NavLink 
-                to="/login" 
-                className={({ isActive }) => 
-                  isActive 
-                    ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                    : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                }>
-                Login
-              </NavLink>
-            </li>
-          </ul>
-        </nav>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/post" element={<Post />} />
-          <Route path="/reviews" element={<ReviewPage />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-        </Routes>
-      </div>
-    </Router>
+    <AuthContextProvider>
+      <Router>
+        <AppContent user={user} setUser={setUser} />
+      </Router>
+    </AuthContextProvider>
   );
 }
+
+const AppContent = ({ user, setUser }) => {
+  const location = useLocation();
+  const currentRoute = location.pathname;
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  // Sign out function
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      setUser(null);
+      window.location.href = "/dashboard"; // Redirect to dashboard
+    } catch (error) {
+      console.error("Error signing out:", error.message);
+    }
+  };
+
+  const isDashboard = currentRoute === "/dashboard";
+
+  return (
+    <div>
+      {/* Navbar: Only visible if user is logged in and not on Dashboard */}
+      {!isDashboard && user && (
+        <nav className="bg-gray-800 p-4 flex items-center justify-between">
+          {/* Centered Links */}
+          <div className="flex-grow flex justify-center">
+            <ul className="flex items-center space-x-6">
+              <li>
+                <NavLink
+                  to="/"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-white px-4 py-2 bg-blue-700 rounded"
+                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                  }
+                >
+                  Rating
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/post"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-white px-4 py-2 bg-blue-700 rounded"
+                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                  }
+                >
+                  Post
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/reviews"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-white px-4 py-2 bg-blue-700 rounded"
+                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                  }
+                >
+                  Reviews
+                </NavLink>
+              </li>
+            </ul>
+          </div>
+          <div className="relative">
+            {/* Display profile info */}
+            <button
+              onClick={() => setShowDropdown((prev) => !prev)}
+              className="flex items-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none"
+            >
+              {user?.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt="Profile"
+                  className="w-8 h-8 rounded-full"
+                />
+              ) : (
+                <span className="text-white font-medium">
+                  {user?.email ? user.email : "Guest"}
+                </span>
+              )}
+            </button>
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg">
+                <div className="p-4 border-b">
+                  <p className="text-gray-800 font-medium">
+                    {user?.displayName || "User"}
+                  </p>
+                  <p className="text-sm text-gray-600">{user?.email}</p>
+                </div>
+                <div>
+                  <button
+                    onClick={handleSignOut}
+                    className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </nav>
+      )}
+
+      {/* Routes */}
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/post"
+          element={
+            <ProtectedRoute>
+              <Post />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/reviews"
+          element={
+            <ProtectedRoute>
+              <ReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    </div>
+  );
+};
 
 export default App;
