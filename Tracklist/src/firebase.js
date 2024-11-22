@@ -2,7 +2,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage"; // Import Firebase storage
 import { getAuth } from "firebase/auth"; // Import Firebase auth
-
+import { getFunctions, connectFunctionsEmulator } from "firebase/functions";
 
 
 // Firebase configuration using environment variables
@@ -25,8 +25,13 @@ const storage = getStorage(app); // Initialize storage using app
 const videoDB = getStorage(app);
 const textDB = getStorage(app);
 const auth = getAuth();
-export {videoDB,textDB, db, storage, auth};
+const functions = getFunctions(app);
 
+// Connect to emulator for local development (uncomment during development)
+if (process.env.NODE_ENV === "development") {
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+}
+export {videoDB,textDB, db, storage, auth, functions };
 
 
 

@@ -18,7 +18,7 @@ import { auth } from "./firebaseConfig.js";
 import { onAuthStateChanged,signOut } from "firebase/auth";
 import { AuthContextProvider, useAuth } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
-
+import ContentModerationDashboard from "./ContentModerationDashboard";
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -362,7 +362,6 @@ const Home = () => {
 function App() {
   const [user, setUser] = useState(null);
 
-  // Listen for authentication state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -385,7 +384,6 @@ const AppContent = ({ user, setUser }) => {
 
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Sign out function
   const handleSignOut = async () => {
     try {
       await signOut(auth);
@@ -440,6 +438,18 @@ const AppContent = ({ user, setUser }) => {
                   }
                 >
                   Reviews
+                </NavLink>
+              </li>
+              <li>
+                <NavLink
+                  to="/moderation-dashboard"
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-white px-4 py-2 bg-blue-700 rounded"
+                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                  }
+                >
+                  Moderation Dashboard
                 </NavLink>
               </li>
             </ul>
@@ -507,6 +517,14 @@ const AppContent = ({ user, setUser }) => {
           element={
             <ProtectedRoute>
               <ReviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/moderation-dashboard"
+          element={
+            <ProtectedRoute>
+              <ContentModerationDashboard />
             </ProtectedRoute>
           }
         />
