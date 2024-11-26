@@ -35,20 +35,21 @@ exports.addBlockedTerm = functions.https.onRequest((req, res) => {
 
 // Get Blocked Terms Function
 exports.getBlockedTerms = functions.https.onRequest((req, res) => {
-  cors(req, res, async () => {
-    try {
-      const blockedTermsRef = db.collection("blockedTerms");
-      const snapshot = await blockedTermsRef.get();
-      const terms = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      console.log("Blocked terms fetched:", terms);
-
-      return res.status(200).send({ success: true, terms });
-    } catch (error) {
-      console.error("Error fetching blocked terms:", error);
-      return res.status(500).send({ success: false, error: "Failed to fetch terms." });
-    }
+    cors(req, res, async () => {
+      try {
+        const blockedTermsRef = db.collection("blockedTerms");
+        const snapshot = await blockedTermsRef.get();
+        const terms = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+  
+        // Ensure the response is in JSON format
+        res.status(200).json({ success: true, terms });
+      } catch (error) {
+        console.error("Error fetching blocked terms:", error);
+        res.status(500).json({ success: false, error: "Failed to fetch terms." });
+      }
+    });
   });
-});
+  
 
 // Delete Blocked Term Function
 exports.deleteBlockedTerm = functions.https.onRequest((req, res) => {

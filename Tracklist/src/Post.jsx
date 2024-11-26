@@ -1,27 +1,53 @@
-import { useState, useEffect } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from './firebase'; // Import Firebase configuration
-import PostForm from './PostForm';
-import PostList from './PostList';
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
+import PostForm from "./PostForm";
+import PostList from "./PostList";
+import { useState, useEffect } from "react";
+import { toast } from "react-toastify";
 
 function Post() {
-  const [posts, setPosts] = useState([]); // Initialize with empty array
-  const [isPopupOpen, setIsPopupOpen] = useState(false); // State for controlling popup visibility
+  const [posts, setPosts] = useState([]);
+  const [blockedTerms, setBlockedTerms] = useState([]);
+  const [filterEnabled, setFilterEnabled] = useState(true);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Function to load posts from Firestore
+  const isLocal = process.env.NODE_ENV === "development"; // Environment check
+  const baseURL = isLocal
+    ? "http://127.0.0.1:5001/tracklist-bf80d/us-central1"
+    : "https://us-central1-tracklist-bf80d.cloudfunctions.net";
+
   const loadPosts = async () => {
-    const postsCollection = collection(db, 'UserData');
+    const postsCollection = collection(db, "UserData");
     const postSnapshot = await getDocs(postsCollection);
-    const postList = postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    setPosts(postList); // Set the posts from Firestore to state
+    const postList = postSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    setPosts(postList);
+  };
+
+  const fetchBlockedTerms = async () => {
+    try {
+      const response = await fetch(`${baseURL}/getBlockedTerms`);
+      const text = await response.text();
+      console.log("Raw response:", text); // Debug raw response
+      const data = JSON.parse(text);
+
+      if (data.success) {
+        setBlockedTerms(data.terms.map((term) => term.term.toLowerCase()));
+      } else {
+        toast.error(data.error || "Failed to fetch terms");
+      }
+    } catch (error) {
+      console.error("Error fetching blocked terms:", error);
+      toast.error("Failed to fetch blocked terms");
+    }
   };
 
   useEffect(() => {
-    loadPosts(); // Fetch posts on initial load
+    loadPosts();
+    fetchBlockedTerms();
   }, []);
 
   const handlePostSubmit = (newPost) => {
-    setPosts([...posts, newPost]); // Update the post list with the new post
+    setPosts([...posts, newPost]);
   };
 
   const openPopup = () => setIsPopupOpen(true);
@@ -30,16 +56,12 @@ function Post() {
   return (
     <div className="min-h-screen bg-gray-100 py-6 relative">
       <h1 className="text-3xl text-center font-bold mb-6">Tracklist</h1>
-
-      {/* Button to open the PostForm popup */}
       <button
         className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded"
         onClick={openPopup}
       >
         Create New Post
       </button>
-
-      {/* Conditionally render the PostForm popup */}
       {isPopupOpen && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded shadow-lg relative w-3/4 max-w-3xl">
@@ -54,8 +76,23 @@ function Post() {
         </div>
       )}
 
-      {/* Display the list of posts */}
-      <PostList posts={posts} />
+      <div className="flex items-center justify-center mt-4">
+        <label htmlFor="filterToggle" className="mr-2 text-sm text-gray-600">
+          Enable Filtering
+        </label>
+        <input
+          type="checkbox"
+          id="filterToggle"
+          checked={filterEnabled}
+          onChange={() => setFilterEnabled(!filterEnabled)}
+          className="toggle-checkbox"
+        />
+      </div>
+
+      <PostList
+        posts={posts}
+        blockedTerms={filterEnabled ? blockedTerms : []}
+      />
     </div>
   );
 }
