@@ -6,7 +6,6 @@ import "react-toastify/dist/ReactToastify.css";
 const ContentModerationDashboard = () => {
   const [blockedTerm, setBlockedTerm] = useState("");
   const [blockedTerms, setBlockedTerms] = useState([]);
-  const [showFiltered, setShowFiltered] = useState(false);
   const [error, setError] = useState("");
 
   const dummyContent = [
@@ -19,103 +18,92 @@ const ContentModerationDashboard = () => {
 
   const [filteredContent, setFilteredContent] = useState(dummyContent);
 
-  // Base URL configuration for local and production environments
-  // Base URL configuration for local and production environments
-const isLocal = process.env.NODE_ENV === "development"; // Check if running in development mode
-const baseURL = isLocal
-  ? "http://127.0.0.1:5001/tracklist-bf80d/us-central1" // Use the local emulator base URL
-  : "https://us-central1-tracklist-bf80d.cloudfunctions.net"; // Use the production base URL
+  const isLocal = process.env.NODE_ENV === "development";
+  const baseURL = isLocal
+    ? "http://127.0.0.1:5001/tracklist-bf80d/us-central1"
+    : "https://us-central1-tracklist-bf80d.cloudfunctions.net";
 
-// Function to fetch blocked terms
-const fetchBlockedTerms = async () => {
-  try {
-    const response = await fetch(`${baseURL}/getBlockedTerms`);
-    if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-    const data = await response.json();
-    if (data.success) {
-      setBlockedTerms(data.terms.map((term) => term.term));
-    } else {
-      toast.error(data.error || "Failed to fetch terms");
+  // Fetch blocked terms from backend
+  const fetchBlockedTerms = async () => {
+    try {
+      const response = await fetch(`${baseURL}/getBlockedTerms`);
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      const data = await response.json();
+      if (data.success) {
+        setBlockedTerms(data.terms.map((term) => term.term));
+      } else {
+        toast.error(data.error || "Failed to fetch terms");
+      }
+    } catch (error) {
+      console.error("Error fetching blocked terms:", error);
+      toast.error("Failed to fetch blocked terms");
     }
-  } catch (error) {
-    console.error("Error fetching blocked terms:", error);
-    toast.error("Failed to fetch blocked terms");
-  }
-};
+  };
 
-const addBlockedTerm = async () => {
-  if (!blockedTerm.trim()) {
-    setError("Please enter a term to block");
-    toast.error("Please enter a term to block");
-    return;
-  }
-
-  try {
-    const response = await fetch(`${baseURL}/addBlockedTerm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ term: blockedTerm }),
-    });
-    if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-    const data = await response.json();
-    if (data.success) {
-      setBlockedTerms((prev) => [...prev, blockedTerm.toLowerCase()]);
-      setBlockedTerm("");
-      toast.success(data.message);
-    } else {
-      toast.warning(data.error || "Failed to add term");
-    }
-  } catch (error) {
-    console.error("Error adding blocked term:", error);
-    toast.error("Failed to add term");
-  }
-};
-
-const removeBlockedTerm = async (term) => {
-  try {
-    const response = await fetch(`${baseURL}/deleteBlockedTerm`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ term }),
-    });
-    if (!response.ok) throw new Error(`Error: ${response.statusText}`);
-    const data = await response.json();
-    if (data.success) {
-      setBlockedTerms((prev) => prev.filter((t) => t !== term));
-      toast.info(data.message);
-    } else {
-      toast.warning(data.error || "Failed to remove term");
-    }
-  } catch (error) {
-    console.error("Error removing blocked term:", error);
-    toast.error("Failed to remove term");
-  }
-};
-
-
-
-  // Filter dummy content based on blocked terms
-  const filterContent = () => {
-    if (!showFiltered) {
-      setFilteredContent(dummyContent);
+  // Add a blocked term
+  const addBlockedTerm = async () => {
+    if (!blockedTerm.trim()) {
+      setError("Please enter a term to block");
+      toast.error("Please enter a term to block");
       return;
     }
 
+    try {
+      const response = await fetch(`${baseURL}/addBlockedTerm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ term: blockedTerm }),
+      });
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      const data = await response.json();
+      if (data.success) {
+        setBlockedTerms((prev) => [...prev, blockedTerm.toLowerCase()]);
+        setBlockedTerm("");
+        toast.success(data.message);
+      } else {
+        toast.warning(data.error || "Failed to add term");
+      }
+    } catch (error) {
+      console.error("Error adding blocked term:", error);
+      toast.error("Failed to add term");
+    }
+  };
+
+  // Remove a blocked term
+  const removeBlockedTerm = async (term) => {
+    try {
+      const response = await fetch(`${baseURL}/deleteBlockedTerm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ term }),
+      });
+      if (!response.ok) throw new Error(`Error: ${response.statusText}`);
+      const data = await response.json();
+      if (data.success) {
+        setBlockedTerms((prev) => prev.filter((t) => t !== term));
+        toast.info(data.message);
+      } else {
+        toast.warning(data.error || "Failed to remove term");
+      }
+    } catch (error) {
+      console.error("Error removing blocked term:", error);
+      toast.error("Failed to remove term");
+    }
+  };
+
+  // Filter content based on blocked terms
+  useEffect(() => {
     const filtered = dummyContent.filter((content) => {
       return !blockedTerms.some((term) =>
         content.text.toLowerCase().includes(term)
       );
     });
     setFilteredContent(filtered);
-  };
+  }, [blockedTerms]);
 
   useEffect(() => {
     fetchBlockedTerms();
   }, []);
-
-  useEffect(() => {
-    filterContent();
-  }, [blockedTerms, showFiltered]);
 
   return (
     <div className="min-h-screen bg-gray-100 p-4 md:p-8">
@@ -187,28 +175,7 @@ const removeBlockedTerm = async (term) => {
           </div>
 
           <div className="md:col-span-2 bg-white rounded-lg shadow-md p-6">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-semibold">Content Display</h2>
-              <div className="flex items-center space-x-2">
-                <label htmlFor="filterToggle" className="text-sm text-gray-600">
-                  Show Filtered Content
-                </label>
-                <div className="relative inline-block w-12 mr-2 align-middle select-none">
-                  <input
-                    type="checkbox"
-                    id="filterToggle"
-                    checked={showFiltered}
-                    onChange={() => setShowFiltered(!showFiltered)}
-                    className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"
-                  />
-                  <label
-                    htmlFor="filterToggle"
-                    className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"
-                  ></label>
-                </div>
-              </div>
-            </div>
-
+            <h2 className="text-xl font-semibold mb-6">Content Display</h2>
             {filteredContent.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500">

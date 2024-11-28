@@ -8,7 +8,6 @@ import { toast } from "react-toastify";
 function Post() {
   const [posts, setPosts] = useState([]);
   const [blockedTerms, setBlockedTerms] = useState([]);
-  const [filterEnabled, setFilterEnabled] = useState(true);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
   const isLocal = process.env.NODE_ENV === "development"; // Environment check
@@ -76,25 +75,10 @@ function Post() {
         </div>
       )}
 
-      <div className="flex items-center justify-center mt-4">
-        <label htmlFor="filterToggle" className="mr-2 text-sm text-gray-600">
-          Enable Filtering
-        </label>
-        <input
-          type="checkbox"
-          id="filterToggle"
-          checked={filterEnabled}
-          onChange={() => setFilterEnabled(!filterEnabled)}
-          className="toggle-checkbox"
-        />
-      </div>
-
-      <PostList
-        posts={posts}
-        blockedTerms={filterEnabled ? blockedTerms : []}
-      />
+      <PostList posts={posts} blockedTerms={blockedTerms} />
     </div>
   );
 }
 
 export default Post;
+
