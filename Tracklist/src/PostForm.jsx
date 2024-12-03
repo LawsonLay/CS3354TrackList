@@ -24,6 +24,12 @@ function PostForm({ onPostSubmit }) {
     setFile(selectedFile); // Capture the selected file
   };
 
+  const extractHashtags = (text) => {
+    const hashtagRegex = /#(\w+)/g;
+    const matches = text.match(hashtagRegex);
+    return matches ? matches.map(tag => tag.substring(1)) : [];
+  };
+
   // Handle form submission (upload file and save text, file URL, and type to Firestore)
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -35,6 +41,9 @@ function PostForm({ onPostSubmit }) {
     const uid = user ? user.uid : null;
     // Update displayName handling to use email as fallback
     const displayName = user ? (user.displayName || user.email || 'Anonymous') : 'Anonymous';
+
+    // Extract hashtags from text
+    const hashtags = extractHashtags(text);
 
     if (file) {
       // Create a reference to the file in Firebase Storage
@@ -59,10 +68,10 @@ function PostForm({ onPostSubmit }) {
           const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
           // Save post data (text, file URL, type, UID, name, and timestamp) to Firestore
-          const docRef = await addDoc(dberf, { text, fileURL: downloadURL, fileType, uid, displayName, timestamp: serverTimestamp() });
+          const docRef = await addDoc(dberf, { text, fileURL: downloadURL, fileType, uid, displayName, timestamp: serverTimestamp(), hashtags });
 
           // Call the parent function to update the post list
-          onPostSubmit({ id: docRef.id, text, fileURL: downloadURL, fileType, uid, displayName, timestamp: new Date() });
+          onPostSubmit({ id: docRef.id, text, fileURL: downloadURL, fileType, uid, displayName, timestamp: new Date(), hashtags });
 
           // Clear form inputs after success
           setText('');
@@ -79,7 +88,8 @@ function PostForm({ onPostSubmit }) {
         text, 
         uid, 
         displayName, // This will now be email if displayName is null
-        timestamp: serverTimestamp() 
+        timestamp: serverTimestamp(),
+        hashtags
       });
 
       // Call the parent function to update the post list
@@ -88,7 +98,8 @@ function PostForm({ onPostSubmit }) {
         text, 
         uid, 
         displayName, // This will now be email if displayName is null
-        timestamp: new Date() 
+        timestamp: new Date(),
+        hashtags
       });
 
       // Clear form inputs after success
@@ -122,7 +133,7 @@ function PostForm({ onPostSubmit }) {
       <button 
         type="submit" 
         className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600"
-        disabled={uploading} // Disable the button while uploading
+        disabled={uploading}
       >
         {uploading ? 'Uploading...' : 'Submit Post'}
       </button>

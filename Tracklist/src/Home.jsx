@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -52,15 +53,18 @@ const getTextColor = (backgroundColor) => {
 };
 
 const SearchBar = ({ searchQuery, setSearchQuery, handleSearch }) => (
-  <div className="mt-4">
+  <div className="mt-4 flex items-center space-x-4">
     <input
       type="text"
       value={searchQuery}
       onChange={(e) => setSearchQuery(e.target.value)}
       placeholder="Search for a track..."
-      className="p-2 border rounded border-gray-300"
+      className="p-3 rounded-lg bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-md"
     />
-    <button onClick={handleSearch} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover-darken">
+    <button
+      onClick={handleSearch}
+      className="px-5 py-3 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition transform hover:-translate-y-0.5 hover:shadow-lg"
+    >
       Search
     </button>
   </div>
@@ -71,7 +75,7 @@ const TrackDropdown = ({ tracks, selectedTrack, handleTrackSelection }) => (
     <select
       value={selectedTrack}
       onChange={handleTrackSelection}
-      className="p-2 border rounded border-gray-300 w-full max-w-md"
+      className="p-3 rounded-lg bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 w-full max-w-md"
     >
       <option value="">Select a Track</option>
       {tracks.map((track) => (
@@ -91,7 +95,7 @@ const AlbumCover = ({ albumCover, selectedTrack, selectedArtist, isAlbumCoverLoa
       <img 
         src={albumCover || '/noCover.png'} 
         alt="Album Cover" 
-        className="w-48 h-48 object-cover rounded shadow-2xl" 
+        className="w-48 h-48 object-cover rounded-lg shadow-2xl animate-fadeIn"
       />
     )}
     {selectedTrack && (
@@ -106,15 +110,15 @@ const AlbumCover = ({ albumCover, selectedTrack, selectedArtist, isAlbumCoverLoa
 );
 
 const StarRating = ({ rating, hoveredStar, handleRating, setHoveredStar }) => (
-  <div className="text-6xl mt-4">
+  <div className="text-6xl mt-4 flex space-x-2">
     {[1, 2, 3, 4, 5].map((star) => (
       <Star 
         key={star} 
-        filled={star <= rating} 
-        hovered={star <= hoveredStar}
+        filled={star <= (hoveredStar || rating)} 
         onClick={() => handleRating(star)}
         onMouseEnter={() => setHoveredStar(star)}
         onMouseLeave={() => setHoveredStar(0)}
+        className="cursor-pointer transform transition-transform hover:scale-110"
       />
     ))}
   </div>
@@ -267,7 +271,7 @@ const Home = () => {
   );
 
   return (
-    <div className="App relative flex items-center justify-center h-screen flex-col w-full max-w-4xl mx-auto">
+    <div className="App relative flex items-center justify-center min-h-screen flex-col w-full max-w-4xl mx-auto">
       <div className="background-blur" style={backgroundStyle}></div>
       
       <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} />
@@ -301,23 +305,24 @@ const Home = () => {
             setHoveredStar={setHoveredStar} 
           />
 
-          <div className="mt-4 flex items-center space-x-4">
+          <div className="mt-4 flex flex-col items-center">
             <textarea
               value={comment}
               onChange={handleCommentChange}
               placeholder="What's up with it? Up to 280 characters. Use #hashtags to add to communities!"
-              className="p-2 w-full max-w-xl h-24 border rounded border-gray-300"
-              style={{ resize: 'none' }}
+              className="p-3 w-full max-w-xl h-24 rounded-lg bg-gray-800 text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
             />
             <HashtagPreview />
 
             <button
               onClick={handleSubmit}
-              className={`mt-4 px-4 py-2 rounded ${isSubmitted ? 'bg-green-500' : 'bg-blue-500'} text-white hover-darken`}
+              className={`mt-4 px-6 py-3 rounded-full shadow-md text-white transition transform hover:-translate-y-0.5 hover:shadow-lg ${
+                isSubmitted ? 'bg-green-500' : 'bg-blue-500 hover:bg-blue-600'
+              }`}
               disabled={isLoading}
             >
               {isLoading ? (
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                <span className="spinner-border" role="status" aria-hidden="true"></span>
               ) : isSubmitted ? 'Posted!' : 'Post'}
             </button>
           </div>

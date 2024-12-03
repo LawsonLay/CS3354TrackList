@@ -117,6 +117,7 @@ const UserProfile = () => {
               <p className="text-sm" style={{ color: 'white' }}>Rating: {rating.rating}</p>
               <p className="text-sm" style={{ color: 'white' }}>Hashtags: {rating.hashtags.join(', ')}</p>
               <p className="text-sm" style={{ color: 'white' }}>Date: {new Date(rating.timestamp.seconds * 1000).toLocaleDateString()}</p>
+              <p className="text-sm" style={{ color: 'white' }}>Time: {new Date(rating.timestamp.seconds * 1000).toLocaleTimeString()}</p>
               <button 
                 onClick={() => handleDeleteRating(rating.id)} 
                 className="delete-button absolute bottom-2 right-2"
@@ -135,10 +136,10 @@ const UserProfile = () => {
           posts.map((post, index) => (
             // Add 'relative' to position the button absolutely within this container
             <div key={index} className="bg-gray-800 p-4 rounded-lg mb-4 relative">
-              <h2 className="text-sm font-bold absolute top-2 right-4" style={{ color: 'white' }}>{post.displayName}</h2>
-              <p className="text-sm" style={{ color: 'white' }}>{post.text}</p>
+              <p className="text-sm break-words" style={{ color: 'white' }}>{post.text}</p>
               <p className="text-sm" style={{ color: 'white' }}>Likes: {post.likes || 0}</p>
               <p className="text-sm" style={{ color: 'white' }}>Date: {new Date(post.timestamp.seconds * 1000).toLocaleDateString()}</p>
+              <p className="text-sm" style={{ color: 'white' }}>Time: {new Date(post.timestamp.seconds * 1000).toLocaleTimeString()}</p>
               <button 
                 onClick={() => handleDeletePost(post.id)} 
                 className="delete-button absolute bottom-2 right-2"

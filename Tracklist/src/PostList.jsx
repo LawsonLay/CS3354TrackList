@@ -336,6 +336,18 @@ function PostList({ blockedTerms, selectedFeed }) {
                     Your browser does not support the video tag.
                   </video>
                 )}
+                {item.hashtags?.length > 0 && (
+                  <div className="mb-2 space-x-2">
+                    {item.hashtags.map((tag, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-block bg-blue-500 text-white rounded-full px-3 py-1 text-sm"
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 {/* Like and Comment Section */}
                 <div className="mt-4 space-y-4">
                   {/* Like Button */}

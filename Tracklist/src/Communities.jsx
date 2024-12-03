@@ -51,38 +51,52 @@ const Communities = () => {
   };
 
   const fetchPostsByHashtags = async () => {
-    const postsRef = collection(db, 'ratings');
-    const q = query(postsRef, orderBy('timestamp', 'desc'));
-    const querySnapshot = await getDocs(q);
-    
-    console.log('Total documents:', querySnapshot.size);
+    // Fetch ratings
+    const ratingsRef = collection(db, 'ratings');
+    const ratingsQuery = query(ratingsRef, orderBy('timestamp', 'desc'));
+    const ratingsSnapshot = await getDocs(ratingsQuery);
 
+    // Fetch posts
+    const postsRef = collection(db, 'UserData');
+    const postsQuery = query(postsRef, orderBy('timestamp', 'desc'));
+    const postsSnapshot = await getDocs(postsQuery);
+    
     const hashtagPosts = {};
-    querySnapshot.forEach((doc) => {
-      const post = doc.data();
-      console.log('Processing post:', post);
-      
-      // Ensure hashtags exist and are in the correct format
+
+    // Process ratings
+    ratingsSnapshot.forEach((doc) => {
+      const post = { id: doc.id, type: 'rating', ...doc.data() };
       const hashtags = post.hashtags || [];
-      console.log('Found hashtags:', hashtags);
       
-      if (hashtags.length > 0) {
-        hashtags.forEach((tag) => {
-          // Remove # if it exists and convert to lowercase
-          const cleanTag = tag.replace(/^#/, '').toLowerCase();
-          if (!hashtagPosts[cleanTag]) {
-            hashtagPosts[cleanTag] = [];
-          }
-          hashtagPosts[cleanTag].push({ 
-            id: doc.id, 
-            ...post,
-            timestamp: post.timestamp.toDate()
-          });
+      hashtags.forEach((tag) => {
+        const cleanTag = tag.replace(/^#/, '').toLowerCase();
+        if (!hashtagPosts[cleanTag]) {
+          hashtagPosts[cleanTag] = [];
+        }
+        hashtagPosts[cleanTag].push({
+          ...post,
+          timestamp: post.timestamp.toDate()
         });
-      }
+      });
+    });
+
+    // Process posts
+    postsSnapshot.forEach((doc) => {
+      const post = { id: doc.id, type: 'post', ...doc.data() };
+      const hashtags = post.hashtags || [];
+      
+      hashtags.forEach((tag) => {
+        const cleanTag = tag.replace(/^#/, '').toLowerCase();
+        if (!hashtagPosts[cleanTag]) {
+          hashtagPosts[cleanTag] = [];
+        }
+        hashtagPosts[cleanTag].push({
+          ...post,
+          timestamp: post.timestamp.toDate()
+        });
+      });
     });
     
-    console.log('Processed hashtags:', hashtagPosts);
     setCommunities(hashtagPosts);
   };
 
@@ -109,11 +123,17 @@ const Communities = () => {
               <div className="space-y-4">
                 {posts.map((post) => (
                   <div key={post.id} className="bg-gray-700 p-4 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="text-white font-medium">{post.track}</h3>
-                      <span className="text-yellow-400">★ {post.rating}/5</span>
-                    </div>
-                    <p className="text-gray-300 text-sm mb-2">by {post.artist}</p>
+                    {post.type === 'rating' ? (
+                      <>
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-white font-medium">{post.track}</h3>
+                          <span className="text-yellow-400">★ {post.rating}/5</span>
+                        </div>
+                        <p className="text-gray-300 text-sm mb-2">by {post.artist}</p>
+                      </>
+                    ) : (
+                      <p className="text-white whitespace-pre-wrap break-words">{post.text}</p>
+                    )}
                     <p className="text-gray-300">{post.comment}</p>
                     <p className="text-gray-400 text-xs mt-2">
                       {format(post.timestamp, 'PPpp')}
