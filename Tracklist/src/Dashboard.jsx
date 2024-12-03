@@ -37,7 +37,7 @@ const Dashboard = () => {
               to="/"
               className="text-gray-700 dark:text-white font-semibold text-lg hover:text-primary transition-colors"
             >
-              Tracklist
+              TrackList
             </NavLink>
           </div>
           <div className="flex space-x-4">
