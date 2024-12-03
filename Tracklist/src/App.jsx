@@ -9,7 +9,7 @@ import {
 } from "react-router-dom";
 import Star from "./Star";
 import { db } from "./firebaseConfig.js";
-import { collection, addDoc, doc, getDoc } from "firebase/firestore";
+import { collection, addDoc, doc, getDoc, query, where, getDocs, deleteDoc } from "firebase/firestore";
 import ReviewPage from "./ReviewPage";
 import Post from "./Post.jsx";
 import Signup from "./Signup.jsx";
