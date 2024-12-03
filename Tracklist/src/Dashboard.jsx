@@ -41,13 +41,13 @@ const Dashboard = () => {
                   to="/signup"
                   className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
                 >
-                  SignUp
+                  Sign Up
                 </NavLink>
               </>
             ) : (
               <>
                 <span className="text-white font-semibold">
-                  Welcome, {user.email}
+                  Welcome, {user.displayName}
                 </span>
                 <button
                   onClick={handleLogout}

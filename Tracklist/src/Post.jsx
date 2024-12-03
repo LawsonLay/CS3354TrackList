@@ -4,11 +4,13 @@ import PostForm from "./PostForm";
 import PostList from "./PostList";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { getAuth } from 'firebase/auth';
 
 function Post() {
   const [posts, setPosts] = useState([]);
   const [blockedTerms, setBlockedTerms] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [selectedFeed, setSelectedFeed] = useState('all'); // Add this line
 
   const isLocal = process.env.NODE_ENV === "development"; // Environment check
   const baseURL = isLocal
@@ -54,7 +56,21 @@ function Post() {
 
   return (
     <div className="min-h-screen bg-gray-100 py-6 relative">
-      <h1 className="text-3xl text-center font-bold mb-6">Tracklist</h1>
+      <div className="flex justify-start mb-6 ml-6">
+        <button
+          className={`mr-4 text-lg font-semibold ${selectedFeed === 'all' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+          onClick={() => setSelectedFeed('all')}
+        >
+          All Posts
+        </button>
+        <button
+          className={`text-lg font-semibold ${selectedFeed === 'curated' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+          onClick={() => setSelectedFeed('curated')}
+        >
+          Curated Posts
+        </button>
+      </div>
+
       <button
         className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded"
         onClick={openPopup}
@@ -62,7 +78,7 @@ function Post() {
         Create New Post
       </button>
       {isPopupOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center">
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
           <div className="bg-white p-6 rounded shadow-lg relative w-3/4 max-w-3xl">
             <button
               className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -75,7 +91,7 @@ function Post() {
         </div>
       )}
 
-      <PostList posts={posts} blockedTerms={blockedTerms} />
+      <PostList posts={posts} blockedTerms={blockedTerms} selectedFeed={selectedFeed} />
     </div>
   );
 }

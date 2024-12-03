@@ -14,6 +14,7 @@ import Post from "./Post.jsx";
 import Signup from "./Signup.jsx";
 import Login from "./Login.jsx";
 import Dashboard from "./Dashboard.jsx"; // Import the Dashboard component
+import UserProfile from './UserProfile';
 import { auth } from "./firebaseConfig.js";
 import { onAuthStateChanged,signOut } from "firebase/auth";
 import { AuthContextProvider, useAuth } from "./AuthContext";
@@ -118,77 +119,6 @@ const StarRating = ({ rating, hoveredStar, handleRating, setHoveredStar }) => (
   </div>
 );
 
-/**
- * Home component for the Tracklist application.
- * 
- * This component allows users to search for tracks, select a track, rate it, and leave a comment.
- * It interacts with the Last.fm API to fetch track information and album covers, and stores ratings in a Firestore database.
- * 
- * @component
- * 
- * @example
- * return (
- *   <Home />
- * )
- * 
- * @returns {JSX.Element} The rendered Home component.
- * 
- * @typedef {Object} BackgroundStyle
- * @property {string} backgroundColor - The background color of the component.
- * @property {string} [backgroundImage] - The background image URL.
- * @property {string} [backgroundSize] - The size of the background image.
- * @property {string} [backgroundPosition] - The position of the background image.
- * 
- * @typedef {Object} Track
- * @property {string} name - The name of the track.
- * @property {string} artist - The name of the artist.
- * 
- * @typedef {Object} Rating
- * @property {number} rating - The rating given to the track.
- * @property {string} comment - The comment about the track.
- * @property {string} track - The name of the track.
- * @property {string} artist - The name of the artist.
- * @property {Date} timestamp - The timestamp of the rating.
- * 
- * @state {number} rating - The rating given by the user.
- * @state {number} hoveredStar - The star currently being hovered over for rating.
- * @state {string} comment - The comment left by the user.
- * @state {string} selectedTrack - The track selected by the user.
- * @state {string} selectedArtist - The artist of the selected track.
- * @state {string} searchQuery - The search query entered by the user.
- * @state {Track[]} tracks - The list of tracks fetched from Last.fm.
- * @state {string} albumCover - The URL of the album cover.
- * @state {boolean} isSearchPerformed - Whether a search has been performed.
- * @state {boolean} isSubmitted - Whether the rating has been submitted.
- * @state {boolean} isLoading - Whether the submission is in progress.
- * @state {boolean} isAlbumCoverVisible - Whether the album cover is visible.
- * @state {boolean} isAlbumCoverLoading - Whether the album cover is loading.
- * @state {BackgroundStyle} backgroundStyle - The style of the background.
- * @state {string} textColor - The color of the text.
- * @state {string} errorMessage - The error message to display.
- * 
- * @function handleRating
- * @description Handles the rating given by the user.
- * @param {number} rate - The rating given by the user.
- * 
- * @function handleCommentChange
- * @description Handles changes to the comment input.
- * @param {React.ChangeEvent<HTMLTextAreaElement>} e - The change event.
- * 
- * @function handleSearch
- * @description Handles the search for tracks based on the search query.
- * @async
- * 
- * @function handleTrackSelection
- * @description Handles the selection of a track from the dropdown.
- * @param {React.ChangeEvent<HTMLSelectElement>} e - The change event.
- * @async
- * 
- * @function handleSubmit
- * @description Handles the submission of the rating and comment.
- * @async
- */
-
 const Home = () => {
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
@@ -207,6 +137,11 @@ const Home = () => {
   const [textColor, setTextColor] = useState('white');
   const [errorMessage, setErrorMessage] = useState('');
   const [hashtags, setHashtags] = useState([]);
+
+  // Get the user's displayName
+  const displayName = auth.currentUser
+    ? auth.currentUser.displayName || auth.currentUser.email || 'Anonymous'
+    : 'Anonymous';
 
   const handleRating = (rate) => {
     setRating(rate);
@@ -289,7 +224,10 @@ const Home = () => {
         track: selectedTrack,
         artist: selectedArtist,
         timestamp: new Date(),
-        hashtags: extractedHashtags
+        hashtags: extractedHashtags,
+        uid: auth.currentUser.uid,
+        displayName: displayName, // Include displayName in docData
+        albumCover: albumCover, // Include albumCover URL
       };
 
       console.log('Saving document with hashtags:', docData); // Debug log
@@ -403,6 +341,16 @@ function App() {
     <AuthContextProvider>
       <Router>
         <AppContent user={user} setUser={setUser} />
+        <Routes>
+          <Route
+            path="/profile/:uid"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
       </Router>
     </AuthContextProvider>
   );
@@ -413,6 +361,19 @@ const AppContent = ({ user, setUser }) => {
   const currentRoute = location.pathname;
 
   const [showDropdown, setShowDropdown] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.dropdown-container')) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -430,7 +391,13 @@ const AppContent = ({ user, setUser }) => {
     <div>
       {/* Navbar: Only visible if user is logged in and not on Dashboard */}
       {!isDashboard && user && (
-        <nav className="bg-gray-800 p-4 flex items-center justify-between">
+        <nav className="bg-gray-800 p-4 flex items-center justify-between z-50 relative">
+          {/* Logo */}
+          <div className="flex items-center">
+            <NavLink to="/dashboard">
+              <img src="/tracklist.png" alt="Tracklist Logo" className="w-10 h-10 mr-4" />
+            </NavLink>
+          </div>
           {/* Centered Links */}
           <div className="flex-grow flex justify-center">
             <ul className="flex items-center space-x-6">
@@ -495,7 +462,7 @@ const AppContent = ({ user, setUser }) => {
             </li>
           </ul>
           </div>
-          <div className="relative">
+          <div className="relative dropdown-container">
             {/* Display profile info */}
             <button
               onClick={() => setShowDropdown((prev) => !prev)}
@@ -514,7 +481,7 @@ const AppContent = ({ user, setUser }) => {
               )}
             </button>
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg">
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-50">
                 <div className="p-4 border-b">
                   <p className="text-gray-800 font-medium">
                     {user?.displayName || "User"}
@@ -522,6 +489,12 @@ const AppContent = ({ user, setUser }) => {
                   <p className="text-sm text-gray-600">{user?.email}</p>
                 </div>
                 <div>
+                  <button
+                    onClick={() => window.location.href = `/profile/${user.uid}`}
+                    className="w-full px-4 py-2 text-left text-blue-600 hover:bg-gray-100"
+                  >
+                    Profile
+                  </button>
                   <button
                     onClick={handleSignOut}
                     className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100"
@@ -569,10 +542,18 @@ const AppContent = ({ user, setUser }) => {
             </ProtectedRoute>
           }
         />
+           <Route
+          path="/communities"
+          element={
+            <ProtectedRoute>
+              <Communities />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/communities" element={<Communities />} />
+        <Route path="/communities" element={<Communities />} />
       </Routes>
     </div>
   );

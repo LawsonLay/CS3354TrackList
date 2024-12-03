@@ -5,8 +5,9 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { useAuth } from "./AuthContext"; // Import AuthContext
-import { auth } from "./firebase"; // Import Firebase auth instance
+import { auth, db } from "./firebase"; // Import Firebase auth and Firestore instance
 import { useNavigate } from "react-router-dom";
+import { doc, setDoc, getDoc } from "firebase/firestore"; // Import Firestore functions
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -18,6 +19,16 @@ const Login = () => {
   const { logIn, user } = useAuth(); // Use `logIn` and `user` from AuthContext
   const navigate = useNavigate(); // Initialize `useNavigate` for navigation
 
+  // Function to check and create user document in Firestore
+  const checkAndCreateUserDoc = async (uid) => {
+    const userDocRef = doc(db, "users", uid);
+    const userDoc = await getDoc(userDocRef);
+
+    if (!userDoc.exists()) {
+      await setDoc(userDocRef, { uid });
+    }
+  };
+
   // Handle login
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -25,7 +36,8 @@ const Login = () => {
     setError("");
 
     try {
-      await logIn(email, password); // Authenticate user
+      const userCredential = await logIn(email, password); // Authenticate user
+      await checkAndCreateUserDoc(userCredential.user.uid); // Check and create user document
       navigate("/"); // Redirect to the home page after successful login
     } catch (err) {
       setError(err.message || "Failed to log in. Please try again.");
@@ -33,10 +45,7 @@ const Login = () => {
       setLoading(false);
     }
   };
-  if (user) {
-    navigate("/");
-    return null;
-  }
+
   // Handle Google login
   const handleGoogleLogin = async () => {
     setLoading(true);
@@ -44,7 +53,8 @@ const Login = () => {
     const provider = new GoogleAuthProvider();
 
     try {
-      await signInWithPopup(auth, provider); // Sign in with Google
+      const result = await signInWithPopup(auth, provider); // Sign in with Google
+      await checkAndCreateUserDoc(result.user.uid); // Check and create user document
       navigate("/"); // Redirect to the home page after successful login
     } catch (err) {
       setError(err.message || "Failed to log in with Google. Please try again.");
