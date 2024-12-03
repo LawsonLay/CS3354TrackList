@@ -64,7 +64,7 @@ function Post() {
           } transition-colors`}
           onClick={() => setSelectedFeed('curated')}
         >
-          Curated
+          For You
         </button>
         <button
           className={`text-lg font-semibold bg-transparent ${
