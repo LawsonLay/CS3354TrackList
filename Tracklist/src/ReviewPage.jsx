@@ -23,17 +23,22 @@ const ReviewPage = () => {
   }, []);
 
 return (
-    <div className="white-background p-4 min-h-screen">
-        <h1 style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '40px' }}>Reviews</h1>
-        <ul>
+    <div className="bg-light-primary dark:bg-gray-900 p-6 min-h-screen transition-colors duration-300">
+        <h1 className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-10">Reviews</h1>
+        <ul className="space-y-6">
             {reviews.map((review, index) => (
-                <li key={index} style={{ marginBottom: '20px' }}>
-                    <h2 style={{ fontWeight: 'bold' }}>{review.track}</h2>
-                    <p>Artist: {review.artist}</p>
-                    <p style={{ wordWrap: 'break-word' }}>Comment: {review.comment}</p>
-                    <p>Rating: {review.rating}</p>
-                    <p>ID: {review.id}</p>
-                    <p>Submitted: {format(review.timestamp, 'PPpp')}</p> 
+                <li key={index} className="card-base p-6 rounded-lg animate-fadeIn">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-2">
+                        {review.track}
+                    </h2>
+                    <p className="text-gray-700 dark:text-gray-300 mb-2">Artist: {review.artist}</p>
+                    <p className="text-gray-600 dark:text-gray-400 break-words mb-2">
+                        Comment: {review.comment}
+                    </p>
+                    <p className="text-gray-700 dark:text-gray-300 mb-2">Rating: {review.rating}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        Submitted: {format(review.timestamp, 'PPpp')}
+                    </p>
                 </li>
             ))}
         </ul>

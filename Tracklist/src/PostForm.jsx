@@ -1,16 +1,17 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Import serverTimestamp
 import { db, storage } from './firebase'; // Import Firebase configuration
 import { v4 as uuidv4 } from 'uuid'; // To create unique IDs for file uploads
 import { getAuth } from 'firebase/auth'; // Import Firebase Auth
 
-function PostForm({ onPostSubmit }) {
+function PostForm({ onPostSubmit, onClose }) { // Added onClose prop
   const [text, setText] = useState('');
   const [file, setFile] = useState(null); // For any file type
   const [fileType, setFileType] = useState(''); // Store MIME type
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploading, setUploading] = useState(false); // Disable button during upload
+  const formRef = useRef(null); // Reference for the form container
 
   const dberf = collection(db, 'UserData'); // Firestore collection reference
 
@@ -108,36 +109,75 @@ function PostForm({ onPostSubmit }) {
     }
   };
 
+  // Handle clicks outside the form
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (formRef.current && !formRef.current.contains(event.target)) {
+        if (text || file) {
+          if (window.confirm('You have unsaved changes. Are you sure you want to close the post submission?')) {
+            onClose();
+          }
+        } else {
+          onClose();
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [text, file, onClose]);
+
+  // Handle close button click
+  const handleClose = () => {
+    if (text || file) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to close the post submission?')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto p-8 border rounded shadow-md space-y-6 bg-white">
-      <div className="relative">
-        <textarea
-          placeholder="Write something... (280 characters max)"
-          value={text}
-          onChange={(e) => setText(e.target.value.slice(0, 280))}
-          className="w-full h-32 p-4 border border-gray-300 rounded-lg text-sm break-words whitespace-pre-wrap"
-          required
-          maxLength={280}
-        />
-        <span className="absolute bottom-2 right-2 text-sm text-gray-500">
-          {text.length}/280
-        </span>
-      </div>
-      <input
-        type="file"
-        id="fileInput"
-        onChange={handleFileChange}
-        className="block w-full text-sm text-gray-500 border border-gray-300 rounded-lg p-2"
-      />
-      {uploadProgress > 0 && <p>Uploading: {uploadProgress.toFixed(2)}%</p>}
-      <button 
-        type="submit" 
-        className="w-full px-6 py-3 bg-blue-500 text-white text-lg rounded-lg transition duration-200 hover:bg-blue-600"
-        disabled={uploading}
+    <div
+      ref={formRef}
+      className="relative w-full max-w-3xl mx-auto p-8 bg-light-surface dark:bg-gray-800 rounded-lg shadow-soft space-y-6 animate-fadeIn backdrop-blur-sm"
+    >
+      <form 
+        onSubmit={handleSubmit} 
+        className="w-full max-w-3xl mx-auto bg-light-surface dark:bg-gray-800 rounded-lg shadow-md space-y-6 opacity-0 animate-formAppear"
       >
-        {uploading ? 'Uploading...' : 'Submit Post'}
-      </button>
-    </form>
+        <div className="relative">
+          <textarea
+            placeholder="What's happening?"
+            value={text}
+            onChange={(e) => setText(e.target.value.slice(0, 280))}
+            className="w-full h-32 p-4 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-primary focus:border-primary transition"
+            required
+            maxLength={280}
+          />
+          <span className="absolute bottom-2 right-4 text-sm text-gray-500 dark:text-gray-400">
+            {text.length}/280
+          </span>
+        </div>
+        <input
+          type="file"
+          id="fileInput"
+          onChange={handleFileChange}
+          className="block w-full text-sm text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-700 rounded-lg p-2 transition focus:ring-primary focus:border-primary"
+        />
+        {uploadProgress > 0 && <p className="text-sm text-primary">Uploading: {uploadProgress.toFixed(2)}%</p>}
+        <button 
+          type="submit" 
+          className="w-full px-6 py-3 bg-primary text-white text-lg rounded-lg transition transform hover:scale-105 hover:bg-blue-700 disabled:opacity-50"
+          disabled={uploading}
+        >
+          {uploading ? 'Uploading...' : 'List it!'}
+        </button>
+      </form>
+    </div>
   );
 }
 

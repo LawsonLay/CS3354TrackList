@@ -87,64 +87,62 @@ const UserProfile = () => {
 
   if (!userData) {
     return (
-      <div className="flex flex-col items-center justify-start min-h-screen mt-8">
-        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 h-32 w-32 mb-4"></div>
-        <div className="text-4xl" style={{ color: 'white' }}>Loading...</div>
+      <div className="flex flex-col items-center justify-start min-h-screen mt-8 bg-light-primary dark:bg-gray-900">
+        <div className="loader ease-linear rounded-full border-8 border-t-8 border-gray-200 dark:border-gray-700 h-32 w-32 mb-4"></div>
+        <div className="text-4xl text-gray-900 dark:text-white">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="profile-container flex flex-col items-center justify-start min-h-screen" style={{ color: 'white' }}>
-      <div className="flex items-center space-x-4 mt-8">
-        <img src={photoURL} alt="Profile" className="w-16 h-16 rounded-full" />
+    <div className="profile-container flex flex-col items-center justify-start min-h-screen bg-light-primary dark:bg-gray-900">
+      <div className="flex items-center space-x-4 mt-8 p-4 bg-light-surface dark:bg-gray-800 rounded-lg shadow-soft">
+        <img src={photoURL} alt="Profile" className="w-16 h-16 rounded-full shadow-lg" />
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'white' }}>{displayName}</h1>
-          <p className="text-sm">{user.email}</p>
-          <p className="text-sm">Followers: {followersCount}</p> {/* Display followers count */}
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{displayName}</h1>
+          <p className="text-sm text-gray-600 dark:text-gray-300">{user.email}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-300">Followers: {followersCount}</p>
         </div>
       </div>
       <div className="mt-8 w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-4" style={{ color: 'white' }}>Your Ratings</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Your Ratings</h2>
         {ratings.length === 0 ? (
-          <p className="text-sm" style={{ color: 'white' }}>None found... Start now!</p>
+          <p className="text-gray-600 dark:text-gray-400">None found... Start now!</p>
         ) : (
           ratings.map((rating, index) => (
-            // Add 'relative' to position the button absolutely within this container
-            <div key={index} className="bg-gray-800 p-4 rounded-lg mb-4 relative">
-              <h2 className="text-xl font-bold" style={{ color: 'white' }}>{rating.track} by {rating.artist}</h2>
-              <p className="text-sm" style={{ color: 'white' }}>{rating.comment}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Rating: {rating.rating}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Hashtags: {rating.hashtags.join(', ')}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Date: {new Date(rating.timestamp.seconds * 1000).toLocaleDateString()}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Time: {new Date(rating.timestamp.seconds * 1000).toLocaleTimeString()}</p>
+            <div key={index} className="bg-light-surface dark:bg-gray-800 p-4 rounded-lg mb-4 relative shadow-card hover:shadow-soft transition-shadow duration-300">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white">{rating.track} by {rating.artist}</h2>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{rating.comment}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Rating: {rating.rating}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Hashtags: {rating.hashtags.join(', ')}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Date: {new Date(rating.timestamp.seconds * 1000).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Time: {new Date(rating.timestamp.seconds * 1000).toLocaleTimeString()}</p>
               <button 
                 onClick={() => handleDeleteRating(rating.id)} 
-                className="delete-button absolute bottom-2 right-2"
+                className="absolute bottom-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
               >
-                X
+                ✕
               </button>
             </div>
           ))
         )}
       </div>
-      <div className="mt-8 w-full max-w-2xl">
-        <h2 className="text-2xl font-bold mb-4" style={{ color: 'white' }}>Your Posts</h2>
+      <div className="mt-8 w-full max-w-2xl mb-8">
+        <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Your Posts</h2>
         {posts.length === 0 ? (
-          <p className="text-sm" style={{ color: 'white' }}>None found... Start now!</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">None found... Start now!</p>
         ) : (
           posts.map((post, index) => (
-            // Add 'relative' to position the button absolutely within this container
-            <div key={index} className="bg-gray-800 p-4 rounded-lg mb-4 relative">
-              <p className="text-sm break-words" style={{ color: 'white' }}>{post.text}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Likes: {post.likes || 0}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Date: {new Date(post.timestamp.seconds * 1000).toLocaleDateString()}</p>
-              <p className="text-sm" style={{ color: 'white' }}>Time: {new Date(post.timestamp.seconds * 1000).toLocaleTimeString()}</p>
+            <div key={index} className="bg-light-surface dark:bg-gray-800 p-4 rounded-lg mb-4 relative shadow-card hover:shadow-soft transition-shadow duration-300">
+              <p className="text-sm break-words text-gray-700 dark:text-gray-300">{post.text}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Likes: {post.likes || 0}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Date: {new Date(post.timestamp.seconds * 1000).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Time: {new Date(post.timestamp.seconds * 1000).toLocaleTimeString()}</p>
               <button 
                 onClick={() => handleDeletePost(post.id)} 
-                className="delete-button absolute bottom-2 right-2"
+                className="absolute bottom-2 right-2 p-2 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
               >
-                X
+                ✕
               </button>
             </div>
           ))

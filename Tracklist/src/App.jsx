@@ -22,6 +22,8 @@ import { AuthContextProvider, useAuth } from "./AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import ContentModerationDashboard from "./ContentModerationDashboard";
 import Communities from './Communities';
+import { TransitionGroup, CSSTransition } from 'react-transition-group';
+
 
 
 const fetchTracksFromLastFM = async (query) => {
@@ -52,30 +54,39 @@ const getTextColor = (backgroundColor) => {
 };
 
 const SearchBar = ({ searchQuery, setSearchQuery, handleSearch }) => (
-  <div className="mt-4">
-    <input
-      type="text"
-      value={searchQuery}
-      onChange={(e) => setSearchQuery(e.target.value)}
-      placeholder="Search for a track..."
-      className="p-2 border rounded border-gray-300"
-    />
-    <button onClick={handleSearch} className="ml-2 px-4 py-2 bg-blue-500 text-white rounded hover-darken">
-      Search
-    </button>
+  <div className="mt-4 fade-in flex justify-center">
+    <div className="flex items-center">
+      <input
+        type="text"
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        placeholder="Search for a track..."
+        className="p-4 w-64 bg-light-surface dark:bg-gray-800 border-light-tertiary dark:border-gray-700 shadow-sm focus:shadow-md transition-all duration-300 rounded-lg text-gray-700 dark:text-gray-200"
+      />
+      <button 
+        onClick={handleSearch} 
+        className="ml-2 px-6 py-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5"
+      >
+        Search
+      </button>
+    </div>
   </div>
 );
 
 const TrackDropdown = ({ tracks, selectedTrack, handleTrackSelection }) => (
-  <div className="dropdown-container mt-4">
+  <div className="dropdown-container mt-4 slide-up w-full flex justify-center">
     <select
       value={selectedTrack}
       onChange={handleTrackSelection}
-      className="p-2 border rounded border-gray-300 w-full max-w-md"
+      className="p-4 w-full max-w-md bg-light-surface dark:bg-gray-800 border-light-tertiary dark:border-gray-700 shadow-sm focus:shadow-md transition-all duration-300 rounded-lg text-gray-700 dark:text-gray-200"
     >
-      <option value="">Select a Track</option>
+      <option value="" className="dark:bg-gray-800 dark:text-gray-200">Select a Track</option>
       {tracks.map((track) => (
-        <option key={track.mbid || track.url} value={`${track.name} by ${track.artist}`}>
+        <option 
+          key={track.mbid || track.url} 
+          value={`${track.name} by ${track.artist}`}
+          className="dark:bg-gray-800 dark:text-gray-200"
+        >
           {track.name} by {track.artist}
         </option>
       ))}
@@ -84,22 +95,24 @@ const TrackDropdown = ({ tracks, selectedTrack, handleTrackSelection }) => (
 );
 
 const AlbumCover = ({ albumCover, selectedTrack, selectedArtist, isAlbumCoverLoading, textColor }) => (
-  <div className="album-cover-container mt-4 flex flex-col items-center">
+  <div className="album-cover-container mt-8 flex flex-col items-center scale-in">
     {isAlbumCoverLoading ? (
       <div className="album-cover-spinner" role="status"></div>
     ) : (
-      <img 
-        src={albumCover || '/noCover.png'} 
-        alt="Album Cover" 
-        className="w-48 h-48 object-cover rounded shadow-2xl" 
-      />
+      <div className="relative group">
+        <img 
+          src={albumCover || '/noCover.png'} 
+          alt="Album Cover" 
+          className="w-48 h-48 object-cover rounded-lg shadow-2xl hover-transform transition-transform duration-300 ease-in-out" 
+        />
+        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 rounded-lg" />
+      </div>
     )}
     {selectedTrack && (
-      <div className="mt-2 text-lg font-semibold text-center" style={{ color: textColor, textShadow: '4px 4px 8px rgba(0, 0, 0, 0.7)' }}>
-        {selectedTrack}
-        <div className="text-sm font-normal" style={{ color: textColor, textShadow: '4px 4px 8px rgba(0, 0, 0, 0.7)' }}>
-          {selectedArtist}
-        </div>
+      <div className="mt-4 text-lg font-semibold text-center" 
+           style={{ color: textColor, textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)' }}>
+        <div className="text-xl mb-1">{selectedTrack}</div>
+        <div className="text-sm opacity-90">{selectedArtist}</div>
       </div>
     )}
   </div>
@@ -134,10 +147,15 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false); 
   const [isAlbumCoverVisible, setIsAlbumCoverVisible] = useState(false);
   const [isAlbumCoverLoading, setIsAlbumCoverLoading] = useState(false);
-  const [backgroundStyle, setBackgroundStyle] = useState({ backgroundColor: '#1a1a1a' });
+  const [backgroundStyle, setBackgroundStyle] = useState({ backgroundColor: 'rgb(17 24 39)' }); // Updated initial color
   const [textColor, setTextColor] = useState('white');
   const [errorMessage, setErrorMessage] = useState('');
   const [hashtags, setHashtags] = useState([]);
+  const [isClosing, setIsClosing] = useState(false);
+  const [existingRating, setExistingRating] = useState(null);
+  const [showReplaceModal, setShowReplaceModal] = useState(false);
+  const [isDustifying, setIsDustifying] = useState(false);
+  const [isFormResetting, setIsFormResetting] = useState(false);
 
   // Get the user's displayName
   const displayName = auth.currentUser
@@ -191,14 +209,13 @@ const Home = () => {
       const coverUrl = await fetchAlbumCoverFromLastFM(artistName, trackName);
       setAlbumCover(coverUrl);
       setIsAlbumCoverVisible(true);
-      const backgroundColor = coverUrl ? '' : '#1a1a1a';
       setBackgroundStyle({
-        backgroundImage: coverUrl ? `url(${coverUrl})` : '',
-        backgroundColor: backgroundColor,
+        backgroundImage: coverUrl ? `url(${coverUrl})` : 'none',
+        backgroundColor: 'var(--blur-bg-color)',
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
       });
-      setTextColor(getTextColor(backgroundColor));
       setErrorMessage('');
     } catch (error) {
       console.error('Error fetching album cover:', error);
@@ -208,16 +225,115 @@ const Home = () => {
     }
   };
 
+  const resetForm = () => {
+    setIsDustifying(true);
+    setIsFormResetting(true);
+    
+    // First, hide the form elements while keeping the background
+    setTimeout(() => {
+      setIsSearchPerformed(false);
+      setIsAlbumCoverVisible(false);
+    }, 100);
+
+    // Then, start the background dust effect and complete reset
+    setTimeout(() => {
+      setRating(0);
+      setComment('');
+      setSelectedTrack('');
+      setSelectedArtist('');
+      setAlbumCover('');
+      setHashtags([]);
+      setBackgroundStyle({
+        backgroundImage: 'none',
+        backgroundColor: 'var(--blur-bg-color)',
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+      });
+      setIsDustifying(false);
+      setIsFormResetting(false);
+    }, 1500);
+  }; // Added missing closing brace
+
+  const checkExistingRating = async (trackName, artistName, userId) => {
+    const ratingsRef = collection(db, "ratings");
+    const q = query(
+      ratingsRef,
+      where("uid", "==", userId),
+      where("track", "==", trackName),
+      where("artist", "==", artistName)
+    );
+
+    const querySnapshot = await getDocs(q);
+    return querySnapshot.empty ? null : { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+  };
+
+  const ReplaceRatingModal = () => (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+        <h3 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">
+          You've already rated this song
+        </h3>
+        <p className="mb-4 text-gray-700 dark:text-gray-300">
+          Your previous rating: {existingRating?.rating} stars
+          <br />
+          Previous comment: {existingRating?.comment}
+        </p>
+        <div className="flex justify-end space-x-4">
+          <button
+            onClick={() => setShowReplaceModal(false)}
+            className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleReplaceRating}
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Replace Rating
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const handleReplaceRating = async () => {
+    if (existingRating?.id) {
+      try {
+        await deleteDoc(doc(db, "ratings", existingRating.id));
+        await submitRating();
+        setShowReplaceModal(false);
+      } catch (error) {
+        console.error("Error replacing rating:", error);
+        setErrorMessage("Failed to replace rating. Please try again.");
+      }
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedTrack) {
       alert('Please select a track to rate.');
       return;
     }
 
+    try {
+      const existing = await checkExistingRating(selectedTrack, selectedArtist, auth.currentUser.uid);
+      
+      if (existing) {
+        setExistingRating(existing);
+        setShowReplaceModal(true);
+        return;
+      }
+
+      await submitRating();
+    } catch (error) {
+      console.error("Error during submission:", error);
+      setErrorMessage("Failed to submit rating. Please try again.");
+    }
+  };
+
+  const submitRating = async () => {
     setIsLoading(true);
     try {
       const extractedHashtags = extractHashtags(comment);
-      console.log('Hashtags to save:', extractedHashtags); // Debug log
       
       const docData = {
         rating: rating,
@@ -227,27 +343,23 @@ const Home = () => {
         timestamp: new Date(),
         hashtags: extractedHashtags,
         uid: auth.currentUser.uid,
-        displayName: displayName, // Include displayName in docData
-        albumCover: albumCover, // Include albumCover URL
+        displayName: displayName,
+        albumCover: albumCover,
       };
 
-      console.log('Saving document with hashtags:', docData); // Debug log
       await addDoc(collection(db, 'ratings'), docData);
       
       setIsSubmitted(true);
-      setTimeout(() => setIsSubmitted(false), 3000);
-      setRating(0);
-      setComment('');
-      setSelectedTrack('');
-      setSelectedArtist('');
-      setAlbumCover('');
-      setHashtags([]);
-      setBackgroundStyle({ backgroundColor: '#1a1a1a' });
-      setTextColor('white');
-      setErrorMessage('');
-    } catch (e) {
-      console.error('Error adding document:', e);
-      setErrorMessage('Failed to submit rating. Please try again later.');
+      setIsClosing(true);
+      
+      setTimeout(() => {
+        resetForm();
+        setIsClosing(false);
+        setIsSubmitted(false);
+      }, 1500);
+
+    } catch (error) {
+      throw error;
     } finally {
       setIsLoading(false);
     }
@@ -267,62 +379,67 @@ const Home = () => {
   );
 
   return (
-    <div className="App relative flex items-center justify-center h-screen flex-col w-full max-w-4xl mx-auto">
-      <div className="background-blur" style={backgroundStyle}></div>
+    <div className="App relative flex items-center justify-center min-h-screen flex-col w-full max-w-4xl mx-auto p-8">
+      <div className={`background-blur ${isDustifying ? 'dust-effect' : ''}`} style={{
+        ...backgroundStyle,
+        transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}></div>
       
-      <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} />
+      <div className={`glass-effect p-8 rounded-xl w-full max-w-2xl relative z-10 flex flex-col items-center
+        ${isSubmitted ? 'success-pulse' : ''}`}>
+        <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery} handleSearch={handleSearch} />
 
-      {errorMessage && (
-        <div className="mt-4 text-red-500">
-          {errorMessage}
-        </div>
-      )}
-
-      {isSearchPerformed && (
-        <TrackDropdown tracks={tracks} selectedTrack={selectedTrack} handleTrackSelection={handleTrackSelection} />
-      )}
-
-      {isAlbumCoverVisible && (
-        <AlbumCover 
-          albumCover={albumCover} 
-          selectedTrack={selectedTrack} 
-          selectedArtist={selectedArtist} 
-          isAlbumCoverLoading={isAlbumCoverLoading} 
-          textColor={textColor} 
-        />
-      )}
-
-      {isSearchPerformed && (
-        <>
-          <StarRating 
-            rating={rating} 
-            hoveredStar={hoveredStar} 
-            handleRating={handleRating} 
-            setHoveredStar={setHoveredStar} 
-          />
-
-          <div className="mt-4 flex items-center space-x-4">
-            <textarea
-              value={comment}
-              onChange={handleCommentChange}
-              placeholder="What's up with it? Up to 280 characters. Use #hashtags to add to communities!"
-              className="p-2 w-full max-w-xl h-24 border rounded border-gray-300"
-              style={{ resize: 'none' }}
-            />
-            <HashtagPreview />
-
-            <button
-              onClick={handleSubmit}
-              className={`mt-4 px-4 py-2 rounded ${isSubmitted ? 'bg-green-500' : 'bg-blue-500'} text-white hover-darken`}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-              ) : isSubmitted ? 'Posted!' : 'Post'}
-            </button>
+        {errorMessage && (
+          <div className="mt-4 text-red-500 text-center">
+            {errorMessage}
           </div>
-        </>
-      )}
+        )}
+
+        {isSearchPerformed && !isClosing && !isFormResetting && (
+          <div className={`w-full flex flex-col items-center ${isClosing ? 'slide-out-top' : 'slide-up'}`}>
+            <TrackDropdown tracks={tracks} selectedTrack={selectedTrack} handleTrackSelection={handleTrackSelection} />
+
+            {isAlbumCoverVisible && (
+              <AlbumCover 
+                albumCover={albumCover} 
+                selectedTrack={selectedTrack} 
+                selectedArtist={selectedArtist} 
+                isAlbumCoverLoading={isAlbumCoverLoading} 
+                textColor={textColor} 
+              />
+            )}
+
+            <StarRating 
+              rating={rating} 
+              hoveredStar={hoveredStar} 
+              handleRating={handleRating} 
+              setHoveredStar={setHoveredStar} 
+            />
+
+            <div className="mt-4 flex flex-col items-center w-full">
+              <textarea
+                value={comment}
+                onChange={handleCommentChange}
+                placeholder="What's up with it? Up to 280 characters. Use #hashtags to add to communities!"
+                className="p-4 w-full max-w-xl h-24 bg-light-surface dark:bg-gray-800 border-light-tertiary dark:border-gray-700 shadow-sm focus:shadow-md transition-all duration-300 rounded-lg text-gray-700 dark:text-gray-200"
+                style={{ resize: 'none' }}
+              />
+              <HashtagPreview />
+
+              <button
+                onClick={handleSubmit}
+                className={`mt-4 px-6 py-3 rounded-lg ${isSubmitted ? 'bg-green-500' : 'bg-gradient-to-r from-blue-500 to-purple-500'} text-white hover-transform`}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                ) : isSubmitted ? 'Posted!' : 'Post'}
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+      {showReplaceModal && <ReplaceRatingModal />}
     </div>
   );
 };
@@ -352,47 +469,27 @@ const App = () => {
   return (
     <AuthContextProvider>
       <Router>
-        <AppContent user={user} setUser={setUser} isAdmin={isAdmin} /> {/* Pass isAdmin */}
-        <Routes>
-          <Route
-            path="/profile/:uid"
-            element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reviews"
-            element={
-              isAdmin ? (
-                <ProtectedRoute>
-                  <ReviewPage />
-                </ProtectedRoute>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route
-            path="/moderation-dashboard"
-            element={
-              isAdmin ? (
-                <ProtectedRoute>
-                  <ContentModerationDashboard />
-                </ProtectedRoute>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/communities" element={<Communities />} />
-        </Routes>
+        <AppContent user={user} setUser={setUser} isAdmin={isAdmin} />
       </Router>
     </AuthContextProvider>
+  );
+};
+
+const PageTransitionWrapper = ({ children }) => {
+  const location = useLocation();
+  return (
+    <TransitionGroup>
+      <CSSTransition
+        key={location.key}
+        timeout={200}
+        classNames="page-transition"
+        unmountOnExit
+      >
+        <div className="page">
+          {children}
+        </div>
+      </CSSTransition>
+    </TransitionGroup>
   );
 };
 
@@ -431,11 +528,11 @@ const AppContent = ({ user, setUser, isAdmin }) => {
     <div>
       {/* Navbar: Only visible if user is logged in and not on Dashboard */}
       {!isDashboard && user && (
-        <nav className="bg-gray-800 p-4 flex items-center justify-between z-50 relative">
+        <nav className="bg-white dark:bg-gray-800 p-4 flex items-center justify-between z-50 relative font-sans font-bold">
           {/* Logo */}
           <div className="flex items-center">
             <NavLink to="/dashboard">
-              <img src="/tracklist.png" alt="Tracklist Logo" className="w-10 h-10 mr-4" />
+              <img src="/tracklist.png" alt="Tracklist Logo" className="w-10 h-10 mr-4 logo-spin" />
             </NavLink>
           </div>
           {/* Centered Links */}
@@ -446,8 +543,8 @@ const AppContent = ({ user, setUser, isAdmin }) => {
                   to="/"
                   className={({ isActive }) =>
                     isActive
-                      ? "text-white px-4 py-2 bg-blue-700 rounded"
-                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                      ? "text-blue-500 dark:text-blue-400"
+                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
                   }
                 >
                   Rating
@@ -458,22 +555,22 @@ const AppContent = ({ user, setUser, isAdmin }) => {
                   to="/post"
                   className={({ isActive }) =>
                     isActive
-                      ? "text-white px-4 py-2 bg-blue-700 rounded"
-                      : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                      ? "text-blue-500 dark:text-blue-400"
+                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
                   }
                 >
                   Post
                 </NavLink>
               </li>
-              {isAdmin && ( // Conditionally render admin tabs
+              {isAdmin && (
                 <>
                   <li>
                     <NavLink
                       to="/reviews"
                       className={({ isActive }) =>
                         isActive
-                          ? "text-white px-4 py-2 bg-blue-700 rounded"
-                          : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                          ? "text-blue-500 dark:text-blue-400"
+                          : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
                       }
                     >
                       Reviews
@@ -484,8 +581,8 @@ const AppContent = ({ user, setUser, isAdmin }) => {
                       to="/moderation-dashboard"
                       className={({ isActive }) =>
                         isActive
-                          ? "text-white px-4 py-2 bg-blue-700 rounded"
-                          : "text-white px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
+                          ? "text-blue-500 dark:text-blue-400"
+                          : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
                       }
                     >
                       Moderation Dashboard
@@ -496,11 +593,12 @@ const AppContent = ({ user, setUser, isAdmin }) => {
               <li>
                 <NavLink 
                   to="/communities" 
-                  className={({ isActive }) => 
-                    isActive 
-                      ? "white-text px-4 py-2 bg-blue-700 rounded" 
-                      : "white-text px-4 py-2 bg-blue-500 rounded hover:bg-blue-600"
-                  }>
+                  className={({ isActive }) =>
+                    isActive
+                      ? "text-blue-500 dark:text-blue-400"
+                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
+                  }
+                >
                   Communities
                 </NavLink>
               </li>
@@ -510,7 +608,7 @@ const AppContent = ({ user, setUser, isAdmin }) => {
             {/* Display profile info */}
             <button
               onClick={() => setShowDropdown((prev) => !prev)}
-              className="flex items-center space-x-2 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 focus:outline-none"
+              className="flex items-center space-x-2 text-gray-800 dark:text-gray-200 hover:text-blue-500 focus:outline-none"
             >
               {user?.photoURL ? (
                 <img
@@ -519,29 +617,29 @@ const AppContent = ({ user, setUser, isAdmin }) => {
                   className="w-8 h-8 rounded-full"
                 />
               ) : (
-                <span className="text-white font-medium">
+                <span className="font-medium">
                   {user?.email ? user.email : "Guest"}
                 </span>
               )}
             </button>
             {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded shadow-lg z-50">
-                <div className="p-4 border-b">
-                  <p className="text-gray-800 font-medium">
+              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded shadow-lg z-50">
+                <div className="p-4 border-b dark:border-gray-600">
+                  <p className="text-gray-800 dark:text-gray-200 font-medium">
                     {user?.displayName || "User"}
                   </p>
-                  <p className="text-sm text-gray-600">{user?.email}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</p>
                 </div>
                 <div>
                   <button
                     onClick={() => window.location.href = `/profile/${user.uid}`}
-                    className="w-full px-4 py-2 text-left text-blue-600 hover:bg-gray-100"
+                    className="w-full px-4 py-2 text-left text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     Profile
                   </button>
                   <button
                     onClick={handleSignOut}
-                    className="w-full px-4 py-2 text-left text-red-600 hover:bg-gray-100"
+                    className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
                   >
                     Sign Out
                   </button>
@@ -553,44 +651,69 @@ const AppContent = ({ user, setUser, isAdmin }) => {
       )}
 
       {/* Routes */}
-      <Routes>
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Home />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/post"
-          element={
-            <ProtectedRoute>
-              <Post />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/moderation-dashboard"
-          element={
-            <ProtectedRoute>
-              <ContentModerationDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/communities"
-          element={
-            <ProtectedRoute>
-              <Communities />
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/communities" element={<Communities />} />
-      </Routes>
+      <PageTransitionWrapper>
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/post"
+            element={
+              <ProtectedRoute>
+                <Post />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile/:uid"
+            element={
+              <ProtectedRoute>
+                <UserProfile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reviews"
+            element={
+              isAdmin ? (
+                <ProtectedRoute>
+                  <ReviewPage />
+                </ProtectedRoute>
+              ) : (
+                <Navigate to="/" />
+              )
+            }
+          />
+          <Route
+            path="/moderation-dashboard"
+            element={
+              isAdmin ? (
+                <ProtectedRoute>
+                  <ContentModerationDashboard />
+                </ProtectedRoute>
+              ) : (
+                <Navigate to="/" />
+              )
+            }
+          />
+          <Route
+            path="/communities"
+            element={
+              <ProtectedRoute>
+                <Communities />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </PageTransitionWrapper>
     </div>
   );
 };

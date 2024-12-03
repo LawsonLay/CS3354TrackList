@@ -7,6 +7,7 @@ import { getAuth } from 'firebase/auth';
 const Communities = () => {
   const [communities, setCommunities] = useState({});
   const [followedTags, setFollowedTags] = useState([]);
+  const [loading, setLoading] = useState(true);
   const auth = getAuth();
   const user = auth.currentUser;
 
@@ -15,6 +16,12 @@ const Communities = () => {
     if (user) {
       fetchUserFollowedTags();
     }
+
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
+    return () => clearTimeout(timer);
   }, [user]);
 
   const fetchUserFollowedTags = async () => {
@@ -101,20 +108,24 @@ const Communities = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-900 min-h-screen">
-      <h1 className="text-3xl font-bold mb-6 text-white">Communities</h1>
-      {Object.keys(communities).length === 0 ? (
-        <p className="text-white">No communities found</p>
+    <div className="p-6 bg-white dark:bg-gray-900 min-h-screen transition-colors duration-300">
+      <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white">Communities</h1>
+      {Object.keys(communities).length === 0 && !loading ? (
+        <p className="text-gray-800 dark:text-white">No communities found</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 communities-fade-in">
           {Object.entries(communities).map(([hashtag, posts]) => (
-            <div key={hashtag} className="bg-gray-800 p-4 rounded-lg shadow-lg">
+            <div key={hashtag} className="bg-gray-100 dark:bg-gray-800 p-4 rounded-lg shadow-lg hover-transform">
               <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-blue-400">#{hashtag}</h2>
+                <h2 className="text-xl font-semibold text-primary dark:text-blue-400">#{hashtag}</h2>
                 {user && (
                   <button
                     onClick={() => handleFollowTag(hashtag)}
-                    className={`px-2 py-1 ${followedTags.includes(hashtag) ? 'bg-blue-700' : 'bg-blue-500'} text-white font-semibold rounded`}
+                    className={`px-2 py-1 ${
+                      followedTags.includes(hashtag) 
+                        ? 'bg-primary/90 hover:bg-primary/100' 
+                        : 'bg-primary hover:bg-primary/90'
+                    } text-white font-semibold rounded transition-colors duration-300`}
                   >
                     {followedTags.includes(hashtag) ? '✅' : '👀'}
                   </button>
@@ -122,20 +133,20 @@ const Communities = () => {
               </div>
               <div className="space-y-4">
                 {posts.map((post) => (
-                  <div key={post.id} className="bg-gray-700 p-4 rounded-lg">
+                  <div key={post.id} className="bg-white dark:bg-gray-700 p-4 rounded-lg shadow-md hover-transform">
                     {post.type === 'rating' ? (
                       <>
                         <div className="flex items-center justify-between mb-2">
-                          <h3 className="text-white font-medium">{post.track}</h3>
-                          <span className="text-yellow-400">★ {post.rating}/5</span>
+                          <h3 className="text-gray-900 dark:text-white font-medium">{post.track}</h3>
+                          <span className="text-yellow-500 dark:text-yellow-400">★ {post.rating}/5</span>
                         </div>
-                        <p className="text-gray-300 text-sm mb-2">by {post.artist}</p>
+                        <p className="text-gray-600 dark:text-gray-300 text-sm mb-2">by {post.artist}</p>
                       </>
                     ) : (
-                      <p className="text-white whitespace-pre-wrap break-words">{post.text}</p>
+                      <p className="text-gray-800 dark:text-white whitespace-pre-wrap break-words">{post.text}</p>
                     )}
-                    <p className="text-gray-300">{post.comment}</p>
-                    <p className="text-gray-400 text-xs mt-2">
+                    <p className="text-gray-600 dark:text-gray-300">{post.comment}</p>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs mt-2">
                       {format(post.timestamp, 'PPpp')}
                     </p>
                   </div>

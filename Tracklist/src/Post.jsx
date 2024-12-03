@@ -4,13 +4,12 @@ import PostForm from "./PostForm";
 import PostList from "./PostList";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { getAuth } from 'firebase/auth';
 
 function Post() {
   const [posts, setPosts] = useState([]);
   const [blockedTerms, setBlockedTerms] = useState([]);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [selectedFeed, setSelectedFeed] = useState('all'); // Add this line
+  const [selectedFeed, setSelectedFeed] = useState('curated'); // Changed default to 'curated'
 
   const isLocal = process.env.NODE_ENV === "development"; // Environment check
   const baseURL = isLocal
@@ -55,38 +54,56 @@ function Post() {
   const closePopup = () => setIsPopupOpen(false);
 
   return (
-    <div className="min-h-screen bg-gray-100 py-6 relative">
-      <div className="flex justify-start mb-6 ml-6">
+    <div className="min-h-screen bg-white dark:bg-gray-900 py-6 relative">
+      <div className="flex justify-start mb-6 ml-6 space-x-4">
         <button
-          className={`mr-4 text-lg font-semibold ${selectedFeed === 'all' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
-          onClick={() => setSelectedFeed('all')}
-        >
-          All Posts
-        </button>
-        <button
-          className={`text-lg font-semibold ${selectedFeed === 'curated' ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500'}`}
+          className={`text-lg font-semibold bg-transparent ${
+            selectedFeed === 'curated' 
+              ? 'text-primary border-b-2 border-primary' 
+              : 'text-gray-700 dark:text-gray-200'
+          } transition-colors`}
           onClick={() => setSelectedFeed('curated')}
         >
-          Curated Posts
+          Curated
+        </button>
+        <button
+          className={`text-lg font-semibold bg-transparent ${
+            selectedFeed === 'all' 
+              ? 'text-primary border-b-2 border-primary' 
+              : 'text-gray-700 dark:text-gray-200'
+          } transition-colors`}
+          onClick={() => setSelectedFeed('all')}
+        >
+          All
         </button>
       </div>
 
-      <button
-        className="absolute top-4 right-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded"
-        onClick={openPopup}
-      >
-        Create New Post
-      </button>
+      <div className="fixed bottom-6 right-6 flex items-center justify-end">
+        <button
+          className="bg-primary text-white font-semibold rounded-full shadow hover:bg-blue-700 transition-all duration-300 flex items-center group w-[48px] hover:w-[160px] overflow-hidden"
+          onClick={openPopup}
+        >
+          <div className="flex items-center justify-center w-full px-2 py-3">
+            <div className="flex items-center transition-all duration-300 w-0 group-hover:w-[100px]">
+              <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap mr-2">
+                Create Post
+              </span>
+            </div>
+            <span className="text-xl flex-shrink-0">✎</span>
+          </div>
+        </button>
+      </div>
+
       {isPopupOpen && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded shadow-lg relative w-3/4 max-w-3xl">
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
+          <div className="bg-light-surface dark:bg-gray-800 p-6 rounded-lg shadow-soft relative w-3/4 max-w-3xl">
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              className="absolute top-4 right-4 text-3xl font-bold text-gray-700 hover:text-gray-900 dark:text-gray-300 dark:hover:text-gray-100 z-[60] transition-colors"
               onClick={closePopup}
             >
-              ✕
+              ×
             </button>
-            <PostForm onPostSubmit={handlePostSubmit} />
+            <PostForm onPostSubmit={handlePostSubmit} onClose={closePopup} />
           </div>
         </div>
       )}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { doc, updateDoc, arrayUnion, increment, collection, onSnapshot, arrayRemove, getDoc } from "firebase/firestore";
 import { db } from "./firebase"; // Adjust the path to your Firebase config
 import { getAuth } from 'firebase/auth'; // Import Firebase Auth
@@ -9,6 +9,8 @@ function PostList({ blockedTerms, selectedFeed }) {
   const [filteredPosts, setFilteredPosts] = useState([]);
   const [commentText, setCommentText] = useState({}); // Tracks input for comments for each post
   const [ratingCommentText, setRatingCommentText] = useState({}); // Tracks input for comments for each rating
+  const [selectedPost, setSelectedPost] = useState(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   const auth = getAuth();
   const user = auth.currentUser;
@@ -143,6 +145,64 @@ function PostList({ blockedTerms, selectedFeed }) {
 
     setFilteredPosts(filtered);
   }, [userPosts, ratingPosts, users, blockedTerms, selectedFeed, uid]);
+
+  // Add/update useEffect to handle body scroll lock
+  useEffect(() => {
+    if (selectedPost) {
+      document.body.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+    }
+    return () => document.body.classList.remove('modal-open');
+  }, [selectedPost]);
+
+  // Add this new useEffect to keep selectedPost in sync with filteredPosts
+  useEffect(() => {
+    if (selectedPost) {
+      const updatedPost = filteredPosts.find(post => post.id === selectedPost.id);
+      if (updatedPost) {
+        setSelectedPost(updatedPost);
+      }
+    }
+  }, [filteredPosts]);
+
+  // Add this new function to check if the click target is interactive
+  const isInteractiveElement = (element) => {
+    const interactiveElements = ['BUTTON', 'TEXTAREA', 'INPUT'];
+    let current = element;
+    
+    // Check the clicked element and its parents up to the post container
+    while (current && !current.classList.contains('post-container')) {
+      if (interactiveElements.includes(current.tagName)) {
+        return true;
+      }
+      current = current.parentElement;
+    }
+    return false;
+  };
+
+  // Modify handlePostClick to check for interactive elements
+  const handlePostClick = useCallback((event, post) => {
+    if (isInteractiveElement(event.target)) {
+      return;
+    }
+    setSelectedPost(post);
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setIsClosing(true);
+    setTimeout(() => {
+      setSelectedPost(null);
+      setIsClosing(false);
+    }, 300);
+  }, []);
+
+  // Close modal when clicking outside
+  const handleOverlayClick = useCallback((e) => {
+    if (e.target === e.currentTarget) {
+      handleCloseModal();
+    }
+  }, [handleCloseModal]);
 
   const handleLike = async (postId, likedBy) => {
     if (!uid) return;
@@ -292,183 +352,322 @@ function PostList({ blockedTerms, selectedFeed }) {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto mt-6">
+    <div className="space-y-6 max-w-2xl mx-auto mt-6">
       {filteredPosts.length === 0 ? (
-        <p className="text-gray-500">No posts available matching the criteria.</p>
+        <p className="text-gray-500 dark:text-gray-400">No posts available matching the criteria.</p>
       ) : (
         filteredPosts.map((item) => (
-          <div key={item.id} className="p-4 border rounded shadow-md bg-gray-50 relative">
-            {/* Move user info section to top */}
-            <div className="flex justify-end items-center space-x-2 mb-4">
-              <div className="text-right">
-                <p className="text-gray-600 text-sm mb-1">
+          <div
+            key={item.id}
+            onClick={(e) => handlePostClick(e, item)}
+            className="post-container p-6 bg-gray-50 dark:bg-gray-800 rounded-lg shadow-md transition-transform duration-300 transform hover:scale-105 hover:shadow-lg animate-fadeIn cursor-pointer"
+          >
+            {/* Updated User Info Header */}
+            <div className="flex justify-end items-start mb-4">
+              <div className="text-right space-y-1">
+                <p className="text-gray-800 dark:text-white font-semibold">
                   {item.displayName || 'Anonymous'}
                 </p>
-                <p className="text-gray-500 text-xs">
-                  {new Date(getTimestampInMillis(item)).toLocaleString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                  })}
+                {item.uid !== uid && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleFollow(item.uid);
+                    }}
+                    className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                      item.followers?.includes(uid)
+                        ? 'bg-primary text-white'
+                        : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white'
+                    }`}
+                  >
+                    {item.followers?.includes(uid) ? '✓ Following' : 'Follow'}
+                  </button>
+                )}
+                <p className="text-gray-500 dark:text-gray-400 text-xs">
+                  {new Date(getTimestampInMillis(item)).toLocaleString()}
                 </p>
               </div>
-              {item.uid !== uid && (
-                <button
-                  onClick={() => handleFollow(item.uid)}
-                  className={item.followers?.includes(uid) ? 'px-2 py-1 bg-blue-700 text-white font-semibold rounded' : 'px-2 py-1 bg-blue-500 text-white font-semibold rounded'}
-                >
-                  {item.followers?.includes(uid) ? '✅' : '👀'}
-                </button>
+            </div>
+
+            {/* Post Content */}
+            <div className="mb-4">
+              {item.type === 'post' ? (
+                // Normal Post Content
+                <div className="space-y-3">
+                  <p className="text-gray-800 dark:text-white text-lg whitespace-pre-wrap break-words">{item.text}</p>
+                  {item.fileType?.startsWith("image") && (
+                    <img src={item.fileURL} alt="Uploaded content" className="w-full h-auto rounded-lg post-image" />
+                  )}
+                  {item.fileType?.startsWith("video") && (
+                    <video controls preload="metadata" className="w-full rounded-lg">
+                      <source src={item.fileURL} type={item.fileType} />
+                    </video>
+                  )}
+                </div>
+              ) : (
+                // Rating Post Content
+                <div className="space-y-3">
+                  <p className="text-gray-800 dark:text-white text-lg font-bold">
+                    {item.track} by {item.artist}
+                  </p>
+                  {renderStars(item.rating)}
+                  <p className="text-gray-800 dark:text-white whitespace-pre-wrap break-words">{item.comment}</p>
+                  {item.albumCover && (
+                    <img src={item.albumCover} alt="Album Cover" className="w-full h-auto rounded-lg post-image" />
+                  )}
+                </div>
               )}
             </div>
 
-            {item.type === 'post' ? (
-              <>
-                <p className="mb-2 text-gray-800 whitespace-pre-wrap break-words">{item.text}</p>
-                {item.fileType?.startsWith("image") && (
-                  <img src={item.fileURL} alt="Uploaded content" className="w-full h-auto rounded-lg post-image" />
-                )}
-                {item.fileType?.startsWith("video") && (
-                  <video width="100%" height="auto" controls preload="metadata" className="rounded-lg">
-                    <source src={item.fileURL} type={item.fileType} />
-                    Your browser does not support the video tag.
-                  </video>
-                )}
-                {item.hashtags?.length > 0 && (
-                  <div className="mb-2 space-x-2">
-                    {item.hashtags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block bg-blue-500 text-white rounded-full px-3 py-1 text-sm"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {/* Like and Comment Section */}
-                <div className="mt-4 space-y-4">
-                  {/* Like Button */}
-                  <button
-                    onClick={() => handleLike(item.id, item.likedBy)}
-                    className="mr-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded flex items-center"
+            {/* Hashtags */}
+            {item.hashtags?.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {item.hashtags.map((tag, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-block bg-primary/20 text-primary dark:text-white rounded-full px-3 py-1 text-sm"
                   >
-                    {item.likedBy?.includes(uid) ? '❤️' : '🤍'} ({item.likes || 0})
-                  </button>
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
 
-                  {/* Comment Section */}
-                  <div>
-                    <div className="relative">
-                      <input
-                        type="text"
-                        value={commentText[item.id] || ""}
-                        onChange={(e) => handleCommentChange(item.id, e.target.value.slice(0, 280))}
-                        placeholder="Add a comment... (280 characters max)"
-                        className="border rounded px-2 py-1 text-sm w-full mb-2"
-                        maxLength={280}
-                      />
-                      <span className="absolute bottom-4 right-2 text-xs text-gray-500">
-                        {(commentText[item.id] || "").length}/280
-                      </span>
-                    </div>
-                    <button
-                      onClick={() => handleAddComment(item.id)}
-                      className="px-4 py-2 bg-green-500 text-white font-semibold rounded"
-                    >
-                      Submit Comment
-                    </button>
-                  </div>
+            {/* Interaction Section */}
+            <div className="space-y-4" onClick={e => e.stopPropagation()}>
+              {/* Like Button */}
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  item.type === 'post' ? handleLike(item.id, item.likedBy) : handleLikeRating(item.id, item.likedBy);
+                }}
+                className="flex items-center space-x-2 text-primary hover:text-blue-700 transition-colors"
+              >
+                <span>{item.likedBy?.includes(uid) ? '❤️' : '🤍'}</span>
+                <span className="text-gray-800 dark:text-white">({item.likes || 0})</span>
+              </button>
 
-                  {/* Display Comments */}
-                  {item.comments?.length > 0 && (
-                    <ul className="space-y-2 border-t pt-2">
-                      {item.comments.map((comment, idx) => (
-                        <li key={idx} className="text-gray-700 text-sm break-words whitespace-pre-wrap">
-                          <strong>{comment.displayName}</strong> - <strong>{new Date(comment.timestamp).toLocaleString()}</strong>: {comment.text}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+              {/* Comment Section */}
+              <div className="space-y-2">
+                <div className="relative">
+                  <textarea
+                    value={item.type === 'post' ? (commentText[item.id] || "") : (ratingCommentText[item.id] || "")}
+                    onChange={(e) => 
+                      item.type === 'post' 
+                        ? handleCommentChange(item.id, e.target.value)
+                        : handleRatingCommentChange(item.id, e.target.value)
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    placeholder="Add a comment... (280 characters max)"
+                    className="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                    rows="2"
+                    maxLength={280}
+                  />
+                  <span className="absolute bottom-2 right-2 text-xs text-gray-500 dark:text-gray-400">
+                    {(item.type === 'post' ? (commentText[item.id] || "") : (ratingCommentText[item.id] || "")).length}/280
+                  </span>
                 </div>
-              </>
-            ) : (
-              <>
-                <p className="mb-2 text-gray-800 font-bold">
-                  {item.track} by {item.artist}
-                </p>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    item.type === 'post' ? handleAddComment(item.id) : handleAddRatingComment(item.id);
+                  }}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Comment
+                </button>
+              </div>
 
-                {/* Render stars below track and artist name */}
-                {renderStars(item.rating)}
-
-                {/* Display rating comment above the album cover */}
-                <p className="mb-2 text-gray-800 whitespace-pre-wrap break-words">{item.comment}</p>
-
-                {/* Display album cover if available */}
-                {item.albumCover && (
-                  <img src={item.albumCover} alt="Album Cover" className="w-full h-auto rounded-lg mb-2 post-image" />
-                )}
-
-                {item.hashtags?.length > 0 && (
-                  <div className="mb-2 space-x-2">
-                    {item.hashtags.map((tag, idx) => (
-                      <span
-                        key={idx}
-                        className="inline-block bg-blue-500 text-white rounded-full px-3 py-1 text-sm"
-                      >
-                        #{tag}
-                      </span>
+              {/* Display Comments */}
+              {item.comments?.length > 0 && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                  <ul className="space-y-3">
+                    {item.comments.map((comment, idx) => (
+                      <li key={idx} className="text-gray-800 dark:text-white text-sm break-words">
+                        <span className="font-semibold">{comment.displayName}</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-xs ml-2">
+                          {new Date(comment.timestamp).toLocaleString()}
+                        </span>
+                        <p className="mt-1 whitespace-pre-wrap">{comment.text}</p>
+                      </li>
                     ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      )}
+
+      {/* Modal */}
+      {selectedPost && (
+        <div
+          className={`modal-overlay ${isClosing ? 'modal-closing' : ''}`}
+          onClick={handleOverlayClick}
+        >
+          <div className={`modal-content ${isClosing ? 'modal-content-closing' : ''}`}>
+            <div className="p-6 bg-gray-50 dark:bg-gray-800 shadow-xl"> {/* Updated this line */}
+              {/* User Info Header */}
+              <div className="flex justify-end items-start mb-4">
+                <div className="text-right space-y-1">
+                  <p className="text-gray-800 dark:text-white font-semibold">
+                    {selectedPost.displayName || 'Anonymous'}
+                  </p>
+                  {selectedPost.uid !== uid && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFollow(selectedPost.uid);
+                      }}
+                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                        selectedPost.followers?.includes(uid)
+                          ? 'bg-primary text-white'
+                          : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white'
+                      }`}
+                    >
+                      {selectedPost.followers?.includes(uid) ? '✓ Following' : 'Follow'}
+                    </button>
+                  )}
+                  <p className="text-gray-500 dark:text-gray-400 text-xs">
+                    {new Date(getTimestampInMillis(selectedPost)).toLocaleString()}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  className="ml-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Post Content */}
+              <div className="mb-4">
+                {selectedPost.type === 'post' ? (
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-white text-lg whitespace-pre-wrap break-words">
+                      {selectedPost.text}
+                    </p>
+                    {selectedPost.fileType?.startsWith("image") && (
+                      <img
+                        src={selectedPost.fileURL}
+                        alt="Uploaded content"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    )}
+                    {selectedPost.fileType?.startsWith("video") && (
+                      <video controls className="w-full rounded-lg">
+                        <source src={selectedPost.fileURL} type={selectedPost.fileType} />
+                      </video>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <p className="text-gray-800 dark:text-white text-lg font-bold">
+                      {selectedPost.track} by {selectedPost.artist}
+                    </p>
+                    {renderStars(selectedPost.rating)}
+                    <p className="text-gray-800 dark:text-white whitespace-pre-wrap break-words">
+                      {selectedPost.comment}
+                    </p>
+                    {selectedPost.albumCover && (
+                      <img
+                        src={selectedPost.albumCover}
+                        alt="Album Cover"
+                        className="w-full h-auto rounded-lg"
+                      />
+                    )}
                   </div>
                 )}
+              </div>
 
-                {/* Like Button for Rating */}
+              {/* Hashtags */}
+              {selectedPost.hashtags?.length > 0 && (
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {selectedPost.hashtags.map((tag, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-block bg-primary/20 text-primary dark:text-white rounded-full px-3 py-1 text-sm"
+                    >
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {/* Interactions */}
+              <div className="space-y-4">
+                {/* Like Button */}
                 <button
-                  onClick={() => handleLikeRating(item.id, item.likedBy)}
-                  className="mr-4 px-4 py-2 bg-blue-500 text-white font-semibold rounded flex items-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    selectedPost.type === 'post' 
+                      ? handleLike(selectedPost.id, selectedPost.likedBy) 
+                      : handleLikeRating(selectedPost.id, selectedPost.likedBy);
+                  }}
+                  className="flex items-center space-x-2 text-primary hover:text-blue-700 transition-colors"
                 >
-                  {item.likedBy?.includes(uid) ? '❤️' : '🤍'} ({item.likes || 0})
+                  <span>{selectedPost.likedBy?.includes(uid) ? '❤️' : '🤍'}</span>
+                  <span className="text-gray-800 dark:text-white">({selectedPost.likes || 0})</span>
                 </button>
 
-                {/* Comment Section for Rating */}
-                <div className="mt-4 space-y-4">
-                  {/* Comment Input */}
+                {/* Comment Section */}
+                <div className="space-y-2">
                   <div className="relative">
-                    <input
-                      type="text"
-                      value={ratingCommentText[item.id] || ""}
-                      onChange={(e) => handleRatingCommentChange(item.id, e.target.value.slice(0, 280))}
+                    <textarea
+                      value={selectedPost.type === 'post' 
+                        ? (commentText[selectedPost.id] || "") 
+                        : (ratingCommentText[selectedPost.id] || "")}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        selectedPost.type === 'post'
+                          ? handleCommentChange(selectedPost.id, e.target.value)
+                          : handleRatingCommentChange(selectedPost.id, e.target.value);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
                       placeholder="Add a comment... (280 characters max)"
-                      className="border rounded px-2 py-1 text-sm w-full mb-2"
+                      className="w-full p-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-800 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
+                      rows="2"
                       maxLength={280}
                     />
-                    <span className="absolute bottom-4 right-2 text-xs text-gray-500">
-                      {(ratingCommentText[item.id] || "").length}/280
+                    <span className="absolute bottom-2 right-2 text-xs text-gray-500 dark:text-gray-400">
+                      {(selectedPost.type === 'post' 
+                        ? (commentText[selectedPost.id] || "") 
+                        : (ratingCommentText[selectedPost.id] || "")).length}/280
                     </span>
                   </div>
                   <button
-                    onClick={() => handleAddRatingComment(item.id)}
-                    className="px-4 py-2 bg-green-500 text-white font-semibold rounded"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      selectedPost.type === 'post'
+                        ? handleAddComment(selectedPost.id)
+                        : handleAddRatingComment(selectedPost.id);
+                    }}
+                    className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Submit Comment
+                    Comment
                   </button>
+                </div>
 
-                  {/* Display Comments */}
-                  {item.comments?.length > 0 && (
-                    <ul className="space-y-2 border-t pt-2">
-                      {item.comments.map((comment, idx) => (
-                        <li key={idx} className="text-gray-700 text-sm break-words whitespace-pre-wrap">
-                          <strong>{comment.displayName}</strong> - <strong>{new Date(comment.timestamp).toLocaleString()}</strong>: {comment.text}
+                {/* Display Comments */}
+                {selectedPost.comments?.length > 0 && (
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                    <ul className="space-y-3">
+                      {selectedPost.comments.map((comment, idx) => (
+                        <li key={idx} className="text-gray-800 dark:text-white text-sm break-words">
+                          <span className="font-semibold">{comment.displayName}</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-xs ml-2">
+                            {new Date(comment.timestamp).toLocaleString()}
+                          </span>
+                          <p className="mt-1 whitespace-pre-wrap">{comment.text}</p>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-              </>
-            )}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        ))
+        </div>
       )}
     </div>
   );
