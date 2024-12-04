@@ -23,8 +23,81 @@ import ProtectedRoute from "./ProtectedRoute";
 import ContentModerationDashboard from "./ContentModerationDashboard";
 import Communities from './Communities';
 import { TransitionGroup, CSSTransition } from 'react-transition-group';
+import { FaStar, FaPen, FaUsers, FaClipboardList, FaShieldAlt } from 'react-icons/fa';
 
 
+const navItems = [
+  { path: '/', icon: FaStar, label: 'Rating' },
+  { path: '/post', icon: FaPen, label: 'Post' },
+  { path: '/communities', icon: FaUsers, label: 'Communities' }
+];
+
+const AppContent = ({ user, setUser, isAdmin }) => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const location = useLocation();
+  const isDashboard = location.pathname === "/dashboard";
+
+  const allNavItems = [
+    ...navItems,
+    ...(isAdmin ? [
+      { path: '/reviews', icon: FaClipboardList, label: 'Reviews' },
+      { path: '/moderation-dashboard', icon: FaShieldAlt, label: 'Moderation' }
+    ] : [])
+  ];
+
+  return (
+    <div>
+      {!isDashboard && user && (
+        <nav className="bg-white dark:bg-gray-800 p-4 flex items-center justify-between z-50 relative font-sans font-bold">
+          <div className="flex items-center">
+            <NavLink to="/dashboard">
+              <img src="/tracklist.png" alt="Tracklist Logo" className="w-10 h-10 mr-4 logo-spin" />
+            </NavLink>
+          </div>
+          
+          <div className="flex-grow flex justify-center">
+            <ul className="flex items-center space-x-6">
+              {allNavItems.map((item) => (
+                <li key={item.path}>
+                  <NavLink
+                    to={item.path}
+                    className={({ isActive }) =>
+                      `flex items-center space-x-2 ${
+                        isActive
+                          ? "text-blue-500 dark:text-blue-400"
+                          : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
+                      }`
+                    }
+                  >
+                    <item.icon size={18} />
+                    <span>{item.label}</span>
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </nav>
+      )}
+      <PageTransitionWrapper>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile/:uid" element={<UserProfile />} />
+          <Route path="/" element={<Home />} />
+          <Route path="/post" element={<Post />} />
+          <Route path="/communities" element={<Communities />} />
+          {isAdmin && (
+            <>
+              <Route path="/reviews" element={<ReviewPage />} />
+              <Route path="/moderation-dashboard" element={<ContentModerationDashboard />} />
+            </>
+          )}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+        </Routes>
+      </PageTransitionWrapper>
+    </div>
+  );
+};
 
 const fetchTracksFromLastFM = async (query) => {
   const url = `https://ws.audioscrobbler.com/2.0/?method=track.search&track=${encodeURIComponent(query)}&api_key=${import.meta.env.VITE_LASTFM_API_KEY}&format=json`;
@@ -490,231 +563,6 @@ const PageTransitionWrapper = ({ children }) => {
         </div>
       </CSSTransition>
     </TransitionGroup>
-  );
-};
-
-const AppContent = ({ user, setUser, isAdmin }) => {
-  const location = useLocation();
-  const currentRoute = location.pathname;
-
-  const [showDropdown, setShowDropdown] = useState(false);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest('.dropdown-container')) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleSignOut = async () => {
-    try {
-      await signOut(auth);
-      setUser(null);
-      window.location.href = "/dashboard"; // Redirect to dashboard
-    } catch (error) {
-      console.error("Error signing out:", error.message);
-    }
-  };
-
-  const isDashboard = currentRoute === "/dashboard";
-
-  return (
-    <div>
-      {/* Navbar: Only visible if user is logged in and not on Dashboard */}
-      {!isDashboard && user && (
-        <nav className="bg-white dark:bg-gray-800 p-4 flex items-center justify-between z-50 relative font-sans font-bold">
-          {/* Logo */}
-          <div className="flex items-center">
-            <NavLink to="/dashboard">
-              <img src="/tracklist.png" alt="Tracklist Logo" className="w-10 h-10 mr-4 logo-spin" />
-            </NavLink>
-          </div>
-          {/* Centered Links */}
-          <div className="flex-grow flex justify-center">
-            <ul className="flex items-center space-x-6">
-              <li>
-                <NavLink
-                  to="/"
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-blue-500 dark:text-blue-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
-                  }
-                >
-                  Rating
-                </NavLink>
-              </li>
-              <li>
-                <NavLink
-                  to="/post"
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-blue-500 dark:text-blue-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
-                  }
-                >
-                  Post
-                </NavLink>
-              </li>
-              {isAdmin && (
-                <>
-                  <li>
-                    <NavLink
-                      to="/reviews"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "text-blue-500 dark:text-blue-400"
-                          : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
-                      }
-                    >
-                      Reviews
-                    </NavLink>
-                  </li>
-                  <li>
-                    <NavLink
-                      to="/moderation-dashboard"
-                      className={({ isActive }) =>
-                        isActive
-                          ? "text-blue-500 dark:text-blue-400"
-                          : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
-                      }
-                    >
-                      Moderation Dashboard
-                    </NavLink>
-                  </li>
-                </>
-              )}
-              <li>
-                <NavLink 
-                  to="/communities" 
-                  className={({ isActive }) =>
-                    isActive
-                      ? "text-blue-500 dark:text-blue-400"
-                      : "text-gray-800 dark:text-gray-200 hover:text-blue-500"
-                  }
-                >
-                  Communities
-                </NavLink>
-              </li>
-            </ul>
-          </div>
-          <div className="relative dropdown-container">
-            {/* Display profile info */}
-            <button
-              onClick={() => setShowDropdown((prev) => !prev)}
-              className="flex items-center space-x-2 text-gray-800 dark:text-gray-200 hover:text-blue-500 focus:outline-none"
-            >
-              {user?.photoURL ? (
-                <img
-                  src={user.photoURL}
-                  alt="Profile"
-                  className="w-8 h-8 rounded-full"
-                />
-              ) : (
-                <span className="font-medium">
-                  {user?.email ? user.email : "Guest"}
-                </span>
-              )}
-            </button>
-            {showDropdown && (
-              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded shadow-lg z-50">
-                <div className="p-4 border-b dark:border-gray-600">
-                  <p className="text-gray-800 dark:text-gray-200 font-medium">
-                    {user?.displayName || "User"}
-                  </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">{user?.email}</p>
-                </div>
-                <div>
-                  <button
-                    onClick={() => window.location.href = `/profile/${user.uid}`}
-                    className="w-full px-4 py-2 text-left text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  >
-                    Profile
-                  </button>
-                  <button
-                    onClick={handleSignOut}
-                    className="w-full px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
-                  >
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </nav>
-      )}
-
-      {/* Routes */}
-      <PageTransitionWrapper>
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/post"
-            element={
-              <ProtectedRoute>
-                <Post />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile/:uid"
-            element={
-              <ProtectedRoute>
-                <UserProfile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/reviews"
-            element={
-              isAdmin ? (
-                <ProtectedRoute>
-                  <ReviewPage />
-                </ProtectedRoute>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route
-            path="/moderation-dashboard"
-            element={
-              isAdmin ? (
-                <ProtectedRoute>
-                  <ContentModerationDashboard />
-                </ProtectedRoute>
-              ) : (
-                <Navigate to="/" />
-              )
-            }
-          />
-          <Route
-            path="/communities"
-            element={
-              <ProtectedRoute>
-                <Communities />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-        </Routes>
-      </PageTransitionWrapper>
-    </div>
   );
 };
 
