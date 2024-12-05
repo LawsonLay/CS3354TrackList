@@ -33,6 +33,7 @@ const navItems = [
 ];
 
 const AppContent = ({ user, setUser, isAdmin }) => {
+  const { logOut } = useAuth();
   const [showDropdown, setShowDropdown] = useState(false);
   const location = useLocation();
   const isDashboard = location.pathname === "/dashboard";
@@ -75,6 +76,40 @@ const AppContent = ({ user, setUser, isAdmin }) => {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            {user ? (
+              <>
+                <NavLink
+                  to={`/profile/${user.uid}`}
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                >
+                  {user.displayName || user.email}
+                </NavLink>
+                <button
+                  onClick={logOut}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <NavLink
+                  to="/login"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                >
+                  Login
+                </NavLink>
+                <NavLink
+                  to="/signup"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md"
+                >
+                  Sign Up
+                </NavLink>
+              </>
+            )}
           </div>
         </nav>
       )}
