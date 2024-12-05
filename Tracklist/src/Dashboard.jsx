@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 
@@ -15,57 +15,94 @@ const Dashboard = () => {
     }
   };
 
-  useEffect(() => {
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-          behavior: 'smooth'
-        });
-      });
-    });
-  }, []);
+  const reviews = [
+    {
+      title: "Mystic Harmony",
+      year: "2023",
+      author: "melodymaker",
+      rating: "★★★★½",
+      text: "The way each track seamlessly blends into the next, it feels like a single, ethereal journey through sound.",
+      likes: "1,209"
+    },
+    {
+      title: "Reverie in Blue",
+      year: "2022",
+      author: "basslinebuddy",
+      rating: "★★★★",
+      text: "A solid jazz fusion record that brings you to a smoky club at midnight. Sax solos are to die for.",
+      likes: "842"
+    },
+    {
+      title: "Electric Dawn",
+      year: "2024",
+      author: "groovesmith",
+      rating: "★★★★★",
+      text: "This album changed my perspective on electronic music. Every sound is handcrafted and intentional.",
+      likes: "2,304"
+    }
+  ];
+
+  const popularLists = [
+    {
+      name: "Albums everyone should hear at least once",
+      author: "audiophile123",
+      likes: "5,628"
+    },
+    {
+      name: "Top 250 Influential Records",
+      author: "crate_digger",
+      likes: "3,140"
+    },
+    {
+      name: "Best Lo-Fi Tracks",
+      author: "chillhop",
+      likes: "1,089"
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800 flex flex-col transition-all duration-500">
-      <nav className="bg-white dark:bg-gray-800 shadow-lg p-4 transition-colors duration-300">
-        <div className="container mx-auto flex justify-between items-center">
+    <div className="min-h-screen bg-gray-900 font-sans text-white">
+      {/* Navigation */}
+      <nav className="py-4 bg-transparent">
+        <div className="container mx-auto flex justify-between items-center px-4">
           <div className="flex items-center space-x-2">
-            <img src="/tracklist.png" alt="Tracklist Logo" className="h-8 w-8" />
-            <NavLink
-              to="/"
-              className="text-blue-600 dark:text-blue-400 font-semibold text-lg hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
-            >
-              TrackList
-            </NavLink>
+            <img src="/tracklist.svg" alt="Tracklist Logo" className="h-8 w-8" />
+            <span className="text-2xl font-bold text-white">Tracklist</span>
           </div>
-          <div className="flex space-x-4">
-            {!user ? (
+
+          <div className="flex items-center space-x-6 text-white font-medium">
+            {!user && (
               <>
                 <NavLink
                   to="/login"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                  className="hover:text-[#F5EFE6] transition-colors"
                 >
-                  Login
+                  Sign In
                 </NavLink>
                 <NavLink
                   to="/signup"
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md"
+                  className="hover:text-[#F5EFE6] transition-colors"
                 >
-                  Sign Up
+                  Create Account
                 </NavLink>
               </>
-            ) : (
+            )}
+            {user && (
               <>
                 <NavLink
                   to={`/profile/${user.uid}`}
-                  className="text-blue-600 dark:text-blue-400 font-semibold hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                  className="flex items-center space-x-2 hover:text-[#F5EFE6] transition-colors"
                 >
-                  {user.displayName}
+                  <img
+                    src={user.photoURL || "/default-avatar.png"}
+                    alt="Profile"
+                    className="w-8 h-8 rounded-full"
+                  />
+                  <span>{user.displayName}</span>
                 </NavLink>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+                  className="hover:text-[#F5EFE6] transition-colors"
                 >
                   Logout
                 </button>
@@ -75,128 +112,110 @@ const Dashboard = () => {
         </div>
       </nav>
 
-      <main className="flex-grow">
-        <section className="container mx-auto px-4 py-16 text-center">
-          <h1 className="text-5xl font-bold text-blue-600 dark:text-blue-400 mb-6 animate-slideUp hover:scale-105 transition-transform duration-300">
-            Discover Your Next Favorite Song
+      {/* Hero Section with a uniform blended background */}
+      <div
+        className="relative w-full h-[60vh] flex items-center justify-center bg-cover bg-center"
+        style={{
+          // Using a gradient close to #111827 (gray-900) with slight transparency
+          backgroundImage: `linear-gradient(rgba(17,24,39,0.7), rgba(17,24,39,0.7)), url('/')`,
+          backgroundBlendMode: "overlay",
+          backgroundSize: "cover",
+          backgroundPosition: "center"
+        }}
+      >
+        <div className="relative z-10 text-center max-w-2xl px-4">
+          <h1 className="text-4xl md:text-4xl font-bold mb-4 leading-snug text-white">
+            Track songs you’ve listened to.<br />
+            Save those you want to discover.<br />
+            Tell your friends what’s great.
           </h1>
-          <p className="text-xl text-blue-800 dark:text-blue-200 max-w-3xl mx-auto mb-8 animate-slideUp delay-150">
-            TrackList is your personal music discovery platform. Share, rate, and discuss music
-            while connecting with a community that shares your passion.
+          <p className="text-lg md:text-xl text-gray-200 mb-8">
+            The social network for music lovers.
           </p>
           {!user && (
-            <button 
-              onClick={() => navigate('/signup')}
-              className="bg-blue-600 text-white px-8 py-3 rounded-full text-lg font-semibold 
-                hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl 
-                animate-scaleIn delay-300 hover:scale-105 transform-gpu"
+            <button
+              onClick={() => navigate("/signup")}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-full text-lg font-medium transition-all"
             >
-              Join TrackList Today
+              Join today.
             </button>
           )}
-        </section>
+        </div>
+      </div>
 
-        <section className="bg-white dark:bg-gray-800 py-16 transform-gpu">
-          <div className="container mx-auto px-4">
-            <h2 className="text-3xl font-bold text-center text-blue-600 dark:text-blue-400 mb-12 animate-slideUp">
-              Everything You Need to Explore Music
-            </h2>
-            <div className="grid md:grid-cols-3 gap-8">
-              {[
-                {
-                  title: "Discover & Share",
-                  description: "Browse and share songs from Last.fm's extensive library. Rate tracks and share your thoughts in 280 characters.",
-                  icon: "🎵"
-                },
-                {
-                  title: "Connect",
-                  description: "Join music communities, follow other users, and engage in discussions about your favorite genres and artists.",
-                  icon: "👥"
-                },
-                {
-                  title: "Stay Updated",
-                  description: "Experience real-time updates of ratings, comments, and posts from your network and communities.",
-                  icon: "🔄"
-                }
-              ].map((feature, index) => (
-                <div 
-                  key={index} 
-                  className="p-6 bg-blue-50 dark:bg-gray-700 rounded-xl shadow-lg 
-                    hover:shadow-xl transition-all duration-300 animate-fadeIn 
-                    hover:scale-105 transform-gpu hover:-translate-y-1"
-                  style={{ animationDelay: `${index * 150}ms` }}
-                >
-                  <div className="text-4xl mb-4 animate-bounce-slow">{feature.icon}</div>
-                  <h3 className="text-xl font-semibold mb-3 text-blue-600 dark:text-blue-400">{feature.title}</h3>
-                  <p className="text-blue-800 dark:text-blue-200">{feature.description}</p>
+      {/* Reviews Section */}
+      <div className="container mx-auto py-16 px-4">
+        <h2 className="text-3xl font-bold mb-8 text-center">
+          Write and share reviews. Compile your own playlists. Share your life in music.
+        </h2>
+        <p className="text-center text-gray-300 mb-12">
+          Below are some popular reviews and lists from this week.{" "}
+          {!user && (
+            <span
+              onClick={() => navigate("/signup")}
+              className="cursor-pointer text-[#F5EFE6] hover:underline"
+            >
+              Sign up
+            </span>
+          )}{" "}
+          to create your own.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Left Column: Popular Reviews This Week */}
+          <div className="md:col-span-2 space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Popular Reviews This Week</h3>
+              <button className="text-gray-400 hover:text-gray-200 text-sm transition-colors">
+                More
+              </button>
+            </div>
+            <div className="space-y-8">
+              {reviews.map((review, index) => (
+                <div key={index} className="border-b border-gray-700 pb-4">
+                  <h4 className="text-lg font-semibold flex items-center space-x-2">
+                    <span>{review.title}</span>
+                    <span className="text-sm text-gray-400">({review.year})</span>
+                    <span className="text-sm text-green-400">{review.rating}</span>
+                  </h4>
+                  <p className="text-sm text-gray-300 mb-2">
+                    by <span className="text-gray-200 font-medium">@{review.author}</span>
+                  </p>
+                  <p className="text-gray-100 mb-2">{review.text}</p>
+                  <p className="text-sm text-gray-400">{review.likes} likes</p>
                 </div>
               ))}
             </div>
           </div>
-        </section>
 
-        <section className="container mx-auto px-4 py-16">
-          <div className="flex flex-col md:flex-row items-center gap-12">
-            <div className="md:w-1/2 animate-slideRight">
-              <h2 className="text-3xl font-bold text-blue-600 dark:text-blue-400 mb-6">
-                Join a Growing Community of Music Lovers
-              </h2>
-              <ul className="space-y-4 text-blue-800 dark:text-blue-200">
-                <li className="flex items-center">
-                  <span className="mr-3">✓</span>
-                  Rate and review your favorite tracks
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-3">✓</span>
-                  Share text and video posts in real-time
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-3">✓</span>
-                  Follow users and join music communities
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-3">✓</span>
-                  Discover new music through personalized recommendations
-                </li>
-              </ul>
+          {/* Right Column: Popular Lists */}
+          <div className="space-y-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-semibold">Popular Lists</h3>
+              <button className="text-gray-400 hover:text-gray-200 text-sm transition-colors">
+                More
+              </button>
             </div>
-            <div className="md:w-1/2 animate-float">
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-soft 
-                hover:shadow-xl transition-all duration-500 transform-gpu hover:scale-105">
-                <img src="/tracklist.png" alt="TrackList Community" className="w-full rounded-lg" />
-              </div>
-            </div>
+            <ul className="space-y-4">
+              {popularLists.map((listItem, index) => (
+                <li key={index}>
+                  <h4 className="font-semibold text-white hover:text-[#F5EFE6] transition-colors cursor-pointer">
+                    {listItem.name}
+                  </h4>
+                  <p className="text-sm text-gray-400">
+                    by @{listItem.author} · {listItem.likes} likes
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
-        </section>
+        </div>
+      </div>
 
-        <section className="bg-blue-600 text-white py-16 transform-gpu">
-          <div className="container mx-auto px-4 text-center animate-slideUp">
-            <h2 className="text-3xl font-bold mb-6 animate-slideUp">
-              Ready to Start Your Musical Journey?
-            </h2>
-            {!user && (
-              <div className="space-x-4">
-                <button 
-                  onClick={() => navigate('/signup')}
-                  className="bg-white text-blue-600 px-8 py-3 rounded-full text-lg font-semibold 
-                    hover:bg-gray-100 transition-all duration-300 shadow-soft hover:shadow-lg 
-                    hover:scale-105 transform-gpu animate-scaleIn"
-                >
-                  Sign Up Now
-                </button>
-                <button 
-                  onClick={() => navigate('/login')}
-                  className="bg-transparent border-2 border-white px-8 py-3 rounded-full text-lg 
-                    font-semibold hover:bg-white hover:text-blue-600 transition-all duration-300 
-                    hover:scale-105 transform-gpu animate-scaleIn delay-150"
-                >
-                  Log In
-                </button>
-              </div>
-            )}
-          </div>
-        </section>
-      </main>
+      {/* Footer */}
+      <footer className="py-8 bg-gray-900 text-center text-sm text-gray-500">
+        © {new Date().getFullYear()} Tracklist. The social network for music lovers.
+      </footer>
     </div>
   );
 };
