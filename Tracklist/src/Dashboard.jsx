@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "./AuthContext";
+import { useAuth } from "./UserLogin/AuthContext";
 
 const Dashboard = () => {
   const { user, logOut } = useAuth();

@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { doc, updateDoc, arrayUnion, increment, collection, onSnapshot, arrayRemove, getDoc } from "firebase/firestore";
-import { db } from "./firebase"; // Adjust the path to your Firebase config
+import { db } from "../Firebase/firebase"; // Adjust the path to your Firebase config
 import { getAuth } from 'firebase/auth'; // Import Firebase Auth
-import Star from './Star'; // Import the Star component
+import Star from '../Review/Star'; // Import the Star component
 
 function PostList({ blockedTerms, selectedFeed }) {
   const [posts, setPosts] = useState([]);

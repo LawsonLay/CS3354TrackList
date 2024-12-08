@@ -1,6 +1,6 @@
 // src/ReviewPage.jsx
 import React, { useEffect, useState } from 'react';
-import { db } from './firebaseConfig';
+import { db } from '../Firebase/firebaseConfig';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { format } from 'date-fns';
 

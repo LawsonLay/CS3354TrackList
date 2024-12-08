@@ -1,5 +1,5 @@
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "./firebase";
+import { db } from "../Firebase/firebase";
 import PostForm from "./PostForm";
 import PostList from "./PostList";
 import { useState, useEffect } from "react";

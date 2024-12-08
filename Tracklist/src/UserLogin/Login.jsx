@@ -5,7 +5,7 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 import { useAuth } from "./AuthContext"; // Import AuthContext
-import { auth, db } from "./firebase"; // Import Firebase auth and Firestore instance
+import { auth, db } from "../Firebase/firebase"; // Import Firebase auth and Firestore instance
 import { useNavigate } from "react-router-dom";
 import { doc, setDoc, getDoc } from "firebase/firestore"; // Import Firestore functions
 

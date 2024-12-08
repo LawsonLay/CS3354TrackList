@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import { vi } from 'vitest';
 import App from './App';
-import { db } from './firebaseConfig';
+import { db } from './Firebase/firebaseConfig';
 import { collection, addDoc } from 'firebase/firestore';
 
 vi.mock('./firebaseConfig', () => ({

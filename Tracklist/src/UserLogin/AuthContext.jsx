@@ -5,7 +5,7 @@ import {
   onAuthStateChanged,
   signOut,
 } from "firebase/auth";
-import { auth, db } from "./firebase"; // Ensure firebase.js exports `auth` and `db`
+import { auth, db } from "../Firebase/firebase"; // Ensure firebase.js exports `auth` and `db`
 import { doc, setDoc } from "firebase/firestore";
 
 // Create the AuthContext

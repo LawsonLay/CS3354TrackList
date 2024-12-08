@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage'; 
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; // Import serverTimestamp
-import { db, storage } from './firebase'; // Import Firebase configuration
+import { db, storage } from '../Firebase/firebase'; // Import Firebase configuration
 import { v4 as uuidv4 } from 'uuid'; // To create unique IDs for file uploads
 import { getAuth } from 'firebase/auth'; // Import Firebase Auth
 

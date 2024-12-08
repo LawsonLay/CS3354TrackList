@@ -7,18 +7,18 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
-import Star from "./Star";
-import { db } from "./firebaseConfig.js";
+import Star from "./Review/Star";
+import { db } from "./Firebase/firebaseConfig.js";
 import { collection, addDoc, doc, getDoc, query, where, getDocs, deleteDoc } from "firebase/firestore";
-import ReviewPage from "./ReviewPage";
-import Post from "./Post.jsx";
-import Signup from "./Signup.jsx";
-import Login from "./Login.jsx";
+import ReviewPage from "./Review/ReviewPage";
+import Post from "./Posting/Post.jsx";
+import Signup from "./UserLogin/Signup.jsx";
+import Login from "./UserLogin/Login.jsx";
 import Dashboard from "./Dashboard.jsx"; // Import the Dashboard component
-import UserProfile from './UserProfile';
-import { auth } from "./firebaseConfig.js";
+import UserProfile from './UserLogin/UserProfile';
+import { auth } from "./Firebase/firebaseConfig.js";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { AuthContextProvider, useAuth } from "./AuthContext";
+import { AuthContextProvider, useAuth } from "./UserLogin/AuthContext";
 import ProtectedRoute from "./ProtectedRoute";
 import ContentModerationDashboard from "./ContentModerationDashboard";
 import Communities from './Communities';

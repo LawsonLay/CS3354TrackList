@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { FaStar, FaPen, FaUsers, FaClipboardList, FaShieldAlt, FaBars } from 'react-icons/fa';
-import { useAuth } from './AuthContext';
-import { auth } from './firebaseConfig';
+import { useAuth } from './UserLogin/AuthContext';
+import { auth } from './Firebase/firebaseConfig';
 import { signOut } from 'firebase/auth';
 
 const Sidenav = ({ isAdmin }) => {

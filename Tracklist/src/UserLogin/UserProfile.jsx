@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { doc, getDoc, collection, query, where, getDocs, orderBy, deleteDoc } from 'firebase/firestore';
-import { db } from './firebaseConfig';
-import { useAuth } from "./AuthContext"; 
+import { db } from '../Firebase/firebaseConfig';
+import { useAuth } from "../UserLogin/AuthContext"; 
 
 const UserProfile = () => {
   const { uid } = useParams();

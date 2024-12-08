@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { db } from './firebaseConfig';
+import { db } from './Firebase/firebaseConfig';
 import { collection, query, getDocs, orderBy, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 import { getAuth } from 'firebase/auth';
